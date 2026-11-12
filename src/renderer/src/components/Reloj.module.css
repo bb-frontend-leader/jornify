@@ -1,0 +1,120 @@
+/* Cada estado define sus cuatro colores; el resto del componente solo los usa. */
+.cara {
+  --cara-fondo: #3c4b55;
+  --cara-texto: #eef3f6;
+  --cara-suave: #c3cfd6;
+  --cara-riel: rgba(255, 255, 255, 0.2);
+  --cara-relleno: #d3dee5;
+
+  display: flex;
+  flex-direction: column;
+  padding: 14px 18px 16px;
+  border-radius: 14px;
+  background: var(--cara-fondo);
+  color: var(--cara-texto);
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
+}
+
+.cara[data-estado='trabajando'] {
+  --cara-fondo: #0e5a44;
+  --cara-texto: #f1fbf6;
+  --cara-suave: #c4e8d8;
+  --cara-riel: rgba(255, 255, 255, 0.22);
+  --cara-relleno: #a6f0cb;
+}
+
+.cara[data-estado='en_almuerzo'] {
+  --cara-fondo: #f2a91f;
+  --cara-texto: #2b1b00;
+  --cara-suave: #5a3c00;
+  --cara-riel: rgba(43, 27, 0, 0.2);
+  --cara-relleno: #2b1b00;
+}
+
+.cara[data-estado='ausente'] {
+  --cara-fondo: #5b3d91;
+  --cara-texto: #f7f2ff;
+  --cara-suave: #d9cdf1;
+  --cara-riel: rgba(255, 255, 255, 0.22);
+  --cara-relleno: #dcc9ff;
+}
+
+.encabezado {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.estado {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.desde,
+.fila,
+.restante {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cara-suave);
+}
+
+.desde,
+.fila p,
+.restante p {
+  margin: 0;
+}
+
+/* Los dígitos condensados y pesados evocan un panel de horarios; el ancho fijo evita que el reloj "baile". */
+.digital {
+  margin: 6px 0 2px;
+  font-size: 84px;
+  font-weight: 760;
+  font-stretch: 68%;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fila {
+  display: flex;
+  justify-content: space-between;
+}
+
+.restante {
+  margin-top: 10px;
+}
+
+.restante strong {
+  margin-left: 2px;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--cara-texto);
+}
+
+.extra strong {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #ff8a66;
+  color: #2b0f07;
+}
+
+.riel {
+  height: 5px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--cara-riel);
+}
+
+.relleno {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--cara-relleno);
+  transition: width 0.4s ease;
+}

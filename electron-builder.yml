@@ -1,0 +1,56 @@
+# Empaquetado de Jornify: instalador NSIS para Windows 10/11 (npm run empaquetar).
+appId: com.jornify.app
+productName: Jornify
+copyright: Jornify
+directories:
+  output: dist
+
+# Solo lo compilado por electron-vite: las dependencias de producción las agrega electron-builder.
+files:
+  - out/**
+  - package.json
+  - '!**/*.map'
+  # better-sqlite3 trae binarios de todas las plataformas: solo hace falta el de Windows x64.
+  - '!**/better-sqlite3/prebuilds/darwin-*'
+  - '!**/better-sqlite3/prebuilds/linux*'
+  - '!**/better-sqlite3/prebuilds/win32-arm64.node'
+
+asar: true
+# better-sqlite3 trae un .node (N-API precompilado): no puede cargarse desde dentro del asar.
+asarUnpack:
+  - node_modules/better-sqlite3/**
+
+# PowerShell (sonidos) no puede leer del asar: estos archivos van junto al ejecutable, en resources/.
+extraResources:
+  - from: resources/sonidos
+    to: sonidos
+  - from: resources/icono.ico
+    to: icono.ico
+
+# better-sqlite3 v13 es N-API: sirve igual en Node y en Electron, no hay que recompilarlo.
+npmRebuild: false
+
+# Solo los idiomas de Chromium que se usan (la interfaz está en español).
+electronLanguages:
+  - es
+  - es-419
+  - en-US
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: resources/icono.ico
+  executableName: Jornify
+
+nsis:
+  # Instalación por usuario (sin pedir administrador) y en un solo paso: es una app de bandeja.
+  oneClick: true
+  perMachine: false
+  runAfterFinish: true
+  createStartMenuShortcut: true
+  createDesktopShortcut: false
+  shortcutName: Jornify
+  # El historial (%APPDATA%\Jornify) no se borra al desinstalar.
+  deleteAppDataOnUninstall: false
+  artifactName: Jornify-Instalador-${version}.${ext}

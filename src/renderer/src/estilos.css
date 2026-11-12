@@ -1,0 +1,70 @@
+/* Identidad de Jornify: el color lo pone el estado de la jornada; todo lo demás es neutro y callado. */
+:root {
+  color-scheme: light dark;
+  font-family: 'Archivo Variable', 'Segoe UI', system-ui, sans-serif;
+
+  /* Niebla verde-gris, tinta verdosa y pino. */
+  --fondo: #e9eeeb;
+  --superficie: #ffffff;
+  --texto: #16231f;
+  --suave: #4f5d58;
+  --borde: #b9c5c0;
+  --riel: #d2dad6;
+  --foco: #0e5a44;
+
+  /* Tramos de la línea del día (coinciden con el color de la cara de cada estado). */
+  --tramo-trabajando: #0e5a44;
+  --tramo-almuerzo: #f2a91f;
+  --tramo-ausente: #6a49a8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Azul pizarra, no un casi-negro. */
+    --fondo: #1b2430;
+    --superficie: #243142;
+    --texto: #eaf0f4;
+    --suave: #9dadbb;
+    --borde: #3f526a;
+    --riel: #2f3f54;
+    --foco: #7fddb8;
+
+    --tramo-trabajando: #3fbf93;
+    --tramo-almuerzo: #f2a91f;
+    --tramo-ausente: #a78be6;
+  }
+}
+
+html,
+body,
+#raiz {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: var(--fondo);
+  color: var(--texto);
+  font-size: 14px;
+  user-select: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

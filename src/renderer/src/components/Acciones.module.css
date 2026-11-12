@@ -1,0 +1,79 @@
+.acciones,
+.motivo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* El formulario es más bajo que la pila de botones para que todo siga cabiendo en 420 px. */
+.motivo {
+  gap: 4px;
+}
+
+.motivo .principal {
+  height: 38px;
+}
+
+.motivo label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--suave);
+}
+
+.motivo input {
+  height: 36px;
+  margin-bottom: 4px;
+  padding: 0 12px;
+  border: 1.5px solid var(--borde);
+  border-radius: 10px;
+  background: var(--superficie);
+  color: var(--texto);
+  user-select: text;
+}
+
+.motivo input::placeholder {
+  color: var(--suave);
+}
+
+/* Las acciones secundarias se reparten el ancho: una sola ocupa todo, dos van en pareja. */
+.par {
+  display: flex;
+  gap: 8px;
+}
+
+.par button {
+  flex: 1;
+}
+
+.principal,
+.secundario {
+  height: 42px;
+  padding: 0 14px;
+  border: 1.5px solid var(--texto);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.principal {
+  background: var(--texto);
+  color: var(--fondo);
+}
+
+.secundario {
+  height: 38px;
+  border-color: var(--borde);
+  background: transparent;
+  color: var(--texto);
+}
+
+.secundario:hover:not(:disabled) {
+  border-color: var(--texto);
+}
+
+.principal:disabled,
+.secundario:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

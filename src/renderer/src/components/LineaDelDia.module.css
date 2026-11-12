@@ -1,0 +1,74 @@
+.linea {
+  position: relative;
+  padding-top: 6px;
+}
+
+.pista {
+  position: relative;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--riel);
+}
+
+.tramo {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.trabajando {
+  background: var(--tramo-trabajando);
+}
+
+.en_almuerzo {
+  background: var(--tramo-almuerzo);
+}
+
+.ausente {
+  background: var(--tramo-ausente);
+}
+
+/* "Ahora": una línea firme que sobresale de la pista. */
+.ahora {
+  position: absolute;
+  top: 2px;
+  width: 3px;
+  height: 22px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--texto);
+  box-shadow: 0 0 0 2px var(--fondo);
+}
+
+/* Salida estimada: una marca punteada, más discreta que "ahora". */
+.salida {
+  position: absolute;
+  top: 4px;
+  height: 18px;
+  margin-left: -1px;
+  border-left: 2px dotted var(--suave);
+}
+
+.horas {
+  position: relative;
+  height: 16px;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--suave);
+}
+
+.horas span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.horas .primera {
+  transform: none;
+}
+
+.horas .ultima {
+  transform: translateX(-100%);
+}

@@ -1,0 +1,116 @@
+.contenedor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 10px 16px 14px;
+  box-sizing: border-box;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 26px;
+}
+
+.marca {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  font-stretch: 112%;
+  letter-spacing: 0.01em;
+}
+
+.herramientas {
+  display: flex;
+  gap: 4px;
+}
+
+.herramienta {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--suave);
+  cursor: pointer;
+}
+
+.herramienta:hover {
+  border-color: var(--borde);
+}
+
+.programados {
+  position: relative;
+}
+
+.programados[aria-pressed='true'] {
+  border-color: var(--borde);
+  color: var(--texto);
+}
+
+.contador {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 15px;
+  height: 15px;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--texto);
+  color: var(--fondo);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+}
+
+/* Punto de estado de Teams: solo aparece si hay algo que atender o en espera. */
+.punto {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  box-sizing: border-box;
+  border: 2px solid var(--fondo);
+  border-radius: 50%;
+}
+
+.puntoAccion {
+  background: #e0533a;
+}
+
+.puntoEspera {
+  background: var(--tramo-almuerzo);
+}
+
+/* Los sonidos activados son el estado normal: solo se destaca el interruptor "siempre visible". */
+.fijar[aria-pressed='true'] {
+  border-color: var(--texto);
+  background: var(--texto);
+  color: var(--fondo);
+}
+
+.zonaAcciones {
+  margin-top: auto;
+}
+
+.error {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #c62828;
+}
+
+@media (prefers-color-scheme: dark) {
+  .error {
+    color: #ff8f87;
+  }
+}

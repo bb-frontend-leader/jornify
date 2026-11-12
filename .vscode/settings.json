@@ -1,0 +1,40 @@
+{
+  // Oculta del explorador lo generado o ajeno al código de Jornify, para ver solo lo que se edita.
+  "files.exclude": {
+    "**/node_modules": true, // dependencias (npm install)
+    "out": true, // compilado por electron-vite (npm run build)
+    "dist": true, // instalador y app empaquetada (npm run empaquetar)
+    "**/*.tsbuildinfo": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    ".agents": true, // herramientas de asistentes de IA
+    ".claude": true,
+    "skills-lock.json": true,
+    "package-lock.json": true
+  },
+
+  // Que la búsqueda (Ctrl+Mayús+F) no devuelva resultados de carpetas generadas.
+  "search.exclude": {
+    "**/node_modules": true,
+    "out": true,
+    "dist": true,
+    "package-lock.json": true,
+    "docs/capturas": true
+  },
+
+  // Que VS Code no vigile miles de archivos que no cambian a mano.
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/out/**": true,
+    "**/dist/**": true,
+    "**/.git/**": true
+  },
+
+  // Agrupa en el explorador los archivos que van juntos.
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "package.json": "package-lock.json, electron-builder.yml, electron.vite.config.ts",
+    "tsconfig.json": "tsconfig.node.json, tsconfig.web.json"
+  }
+}

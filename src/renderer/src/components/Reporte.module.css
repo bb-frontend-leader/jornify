@@ -1,0 +1,166 @@
+.vista {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.titular {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.volver {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -6px;
+  padding: 0;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--suave);
+  cursor: pointer;
+}
+
+.volver:hover {
+  border-color: var(--borde);
+}
+
+.titulo {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 750;
+}
+
+/* Cuatro opciones en una fila: la elegida se rellena, las demás son solo contorno. */
+.opciones {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.opcion {
+  height: 34px;
+  padding: 0 4px;
+  border: 1.5px solid var(--borde);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--texto);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.opcion:hover {
+  border-color: var(--texto);
+}
+
+.opcion[aria-checked='true'] {
+  border-color: var(--texto);
+  background: var(--texto);
+  color: var(--fondo);
+}
+
+.fechas {
+  display: flex;
+  gap: 8px;
+}
+
+.fechas label {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--suave);
+}
+
+.fechas input {
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 1.5px solid var(--borde);
+  border-radius: 10px;
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 13.5px;
+}
+
+.descripcion {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.contenido {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--suave);
+}
+
+.contenido strong {
+  color: var(--texto);
+  font-weight: 650;
+}
+
+.error {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #c62828;
+}
+
+.hecho {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-size: 12.5px;
+  color: var(--foco);
+}
+
+.hecho p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.enlace {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--texto);
+  font-size: 12.5px;
+  font-weight: 650;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.exportar {
+  height: 42px;
+  margin-top: auto;
+  border: 1.5px solid var(--texto);
+  border-radius: 10px;
+  background: var(--texto);
+  color: var(--fondo);
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.exportar:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (prefers-color-scheme: dark) {
+  .error {
+    color: #ff8f87;
+  }
+}

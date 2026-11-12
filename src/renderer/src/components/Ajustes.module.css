@@ -1,0 +1,209 @@
+.vista {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.titular {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.volver {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -6px;
+  padding: 0;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--suave);
+  cursor: pointer;
+}
+
+.volver:hover {
+  border-color: var(--borde);
+}
+
+.titulo {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 750;
+}
+
+.formulario {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.fila {
+  display: flex;
+  gap: 8px;
+}
+
+.fila label {
+  flex: 1;
+  min-width: 0;
+}
+
+.formulario label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--suave);
+}
+
+.formulario select,
+.formulario input:not([type='checkbox']) {
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: 1.5px solid var(--borde);
+  border-radius: 10px;
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 14px;
+  user-select: text;
+}
+
+.formulario input::placeholder {
+  color: var(--suave);
+}
+
+.formulario .casilla {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--texto);
+  cursor: pointer;
+}
+
+.casilla input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--foco);
+}
+
+.resumen {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--suave);
+}
+
+.resumen strong {
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+}
+
+.error,
+.hecho {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.error {
+  color: #c62828;
+}
+
+.hecho {
+  color: var(--foco);
+}
+
+.botones {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.botones button {
+  flex: 1;
+  height: 38px;
+  border: 1.5px solid var(--texto);
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.principal {
+  background: var(--texto);
+  color: var(--fondo);
+}
+
+.secundario {
+  border-color: var(--borde) !important;
+  background: transparent;
+  color: var(--texto);
+}
+
+.secundario:hover {
+  border-color: var(--texto) !important;
+}
+
+.principal:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (prefers-color-scheme: dark) {
+  .error {
+    color: #ff8f87;
+  }
+}
+
+/* Jornada y Mensajes comparten la ventana: el selector va junto al título para no gastar altura. */
+.pestanas {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.pestana {
+  height: 28px;
+  padding: 0 8px;
+  border: 1.5px solid var(--borde);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--texto);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pestana:hover {
+  border-color: var(--texto);
+}
+
+.pestana[aria-checked='true'] {
+  border-color: var(--texto);
+  background: var(--texto);
+  color: var(--fondo);
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.nota {
+  margin: -6px 0 0 24px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--suave);
+}
