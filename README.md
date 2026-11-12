@@ -74,7 +74,7 @@ La jornada objetivo es de **10 horas netas, sin contar el almuerzo** (los lunes,
 
 ## 🚀 Instalación (para usar la app)
 
-1. 📦 Genera el instalador (ver abajo) o toma `Jornify-Instalador-<versión>.exe`.
+1. 📥 Descarga `Jornify-Instalador-<versión>.exe` de la sección **Releases** del repositorio (o genéralo tú: ver Desarrollo).
 2. ▶️ Ejecútalo: se instala solo para tu usuario, sin pedir administrador, y se abre.
 3. 🛡️ El instalador **no está firmado**: si Windows muestra "Windows protegió su PC", pulsa **Más información → Ejecutar de todos modos**.
 4. 🔗 Conecta Teams (ver la sección siguiente).
@@ -103,13 +103,25 @@ npm run build          # compila main, preload y renderer a out/
 npm start              # ejecuta lo compilado
 npm run typecheck      # TypeScript estricto (main/preload y renderer)
 npm test               # pruebas con Vitest
-npm run empaquetar     # genera el instalador NSIS en dist/
-npm run empaquetar:carpeta   # solo dist/win-unpacked/, para probar sin instalar
+npm run package     # genera el instalador NSIS en dist/
+npm run package:dir   # solo dist/win-unpacked/, para probar sin instalar
 ```
 
 > 🧪 Para probar sin tocar tus datos reales: `$env:JORNIFY_CARPETA_DATOS="$env:TEMP\jornify-prueba"; npm run dev`
 >
 > ⚠️ `npm run dev` y la app instalada comparten `%APPDATA%\Jornify` y la instancia única: cierra una antes de abrir la otra.
+
+### 🏷️ Publicar una versión
+
+Un flujo de GitHub Actions (`.github/workflows/release.yml`) compila el instalador en una máquina Windows y lo adjunta a un release cuando se sube una etiqueta `v*`:
+
+```bash
+# 1. sube "version" en package.json (p. ej. 0.1.1) y haz commit
+git tag v0.1.1
+git push origin main --tags
+```
+
+La etiqueta debe coincidir con la versión de `package.json`; el flujo revisa los tipos y las pruebas antes de empaquetar, y si algo falla no publica nada. El release queda con notas automáticas y el instalador adjunto.
 
 ### 🗂️ Estructura
 

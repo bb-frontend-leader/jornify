@@ -1,0 +1,50 @@
+# Publica un release de GitHub con el instalador de Windows cada vez que se sube una etiqueta v*.
+# Uso:  1) subir la versión en package.json  2) git commit  3) git tag v0.1.1  4) git push origin main --tags
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write # crear el release y adjuntar el instalador
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: La etiqueta debe coincidir con la versión de package.json
+        shell: bash
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::La etiqueta es $GITHUB_REF_NAME pero package.json dice $version. Sube la versión y vuelve a etiquetar."
+            exit 1
+          fi
+
+      - run: npm ci
+
+      - name: Tipos y pruebas
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Generar el instalador
+        run: npm run package -- --publish never
+
+      - name: Publicar el release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/Jornify-Instalador-*.exe \
+            --title "Jornify ${GITHUB_REF_NAME#v}" \
+            --generate-notes

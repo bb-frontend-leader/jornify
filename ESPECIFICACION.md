@@ -261,7 +261,7 @@ Cada fase termina con algo que funciona y se puede probar. Conviene pedirle a Cl
 5. **Webhook de Workflows (plan B):** solo si TI no permite el login con Graph.
 6. **Pantallas de historial y configuración:** historial por día y semana, plantillas editables y ajustes generales. *Hecha y confirmada.*
 7. **Recordatorios e inicio con Windows.** *Implementada; pendiente de confirmación.*
-8. **Empaquetado:** instalador con electron-builder y medición de RAM (metas: menos de 120 MB en bandeja y 220 MB con el reloj abierto). Hecho: `npm run empaquetar` genera `dist/Jornify-Instalador-<versión>.exe` (NSIS, por usuario, sin firmar); medido con la app empaquetada, ~85 MB en bandeja y 140 a 195 MB con el reloj abierto.
+8. **Empaquetado:** instalador con electron-builder y medición de RAM (metas: menos de 120 MB en bandeja y 220 MB con el reloj abierto). Hecho: `npm run package` genera `dist/Jornify-Instalador-<versión>.exe` (NSIS, por usuario, sin firmar); medido con la app empaquetada, ~85 MB en bandeja y 140 a 195 MB con el reloj abierto.
 
 Conviene preguntar a TI por el registro de la app antes de la fase 4; si lo bloquean, se hace la fase 5 en su lugar.
 

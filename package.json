@@ -9,8 +9,8 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "start": "electron-vite preview",
-    "empaquetar": "electron-vite build && electron-builder --win",
-    "empaquetar:carpeta": "electron-vite build && electron-builder --win --dir",
+    "package": "electron-vite build && electron-builder --win",
+    "package:dir": "electron-vite build && electron-builder --win --dir",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:watch": "vitest"

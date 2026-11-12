@@ -3,7 +3,7 @@
   "files.exclude": {
     "**/node_modules": true, // dependencias (npm install)
     "out": true, // compilado por electron-vite (npm run build)
-    "dist": true, // instalador y app empaquetada (npm run empaquetar)
+    "dist": true, // instalador y app empaquetada (npm run package)
     "**/*.tsbuildinfo": true,
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
