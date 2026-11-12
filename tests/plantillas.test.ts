@@ -75,31 +75,31 @@ describe('construirMensaje', () => {
   it('genera el mensaje de cada tipo de evento con las plantillas por defecto', () => {
     const construir = (tipo: Parameters<typeof construirMensaje>[1], fecha: Date, extra = {}): string =>
       construirMensaje(plantillas, tipo, { fecha, mencion, ...extra })
-    expect(construir('inicio', en(8, 2))).toBe('🌅 Buenos días, inicio mi jornada @Angela Ortiz Peña')
-    expect(construir('almuerzo', en(12, 30))).toBe('🍲 Buenas tardes, inicio mi hora de almuerzo @Angela Ortiz Peña')
+    expect(construir('inicio', en(8, 2))).toBe('🌅 Buenos días, inicio mi jornada (8:02 a. m.) @Angela Ortiz Peña')
+    expect(construir('almuerzo', en(12, 30))).toBe('🍲 Buenas tardes, inicio mi hora de almuerzo (12:30 p. m.) @Angela Ortiz Peña')
     expect(construir('regreso_almuerzo', en(13, 30))).toBe(
-      '🍽️ Buenas tardes, termino mi hora de almuerzo @Angela Ortiz Peña'
+      '🍽️ Buenas tardes, termino mi hora de almuerzo (1:30 p. m.) @Angela Ortiz Peña'
     )
-    expect(construir('ausencia', en(10, 10))).toBe('⏸️ Buenos días, me ausento un momento @Angela Ortiz Peña')
-    expect(construir('ausencia', en(15, 10))).toBe('⏸️ Buenas tardes, me ausento un momento @Angela Ortiz Peña')
-    expect(construir('regreso', en(10, 40))).toBe('▶️ Buenos días, regreso @Angela Ortiz Peña')
-    expect(construir('regreso', en(15, 45))).toBe('▶️ Buenas tardes, regreso @Angela Ortiz Peña')
-    expect(construir('fin', en(19, 5))).toBe('🌇 Buenas tardes, termino mi jornada @Angela Ortiz Peña')
+    expect(construir('ausencia', en(10, 10))).toBe('⏸️ Buenos días, me ausento un momento (10:10 a. m.) @Angela Ortiz Peña')
+    expect(construir('ausencia', en(15, 10))).toBe('⏸️ Buenas tardes, me ausento un momento (3:10 p. m.) @Angela Ortiz Peña')
+    expect(construir('regreso', en(10, 40))).toBe('▶️ Buenos días, regreso (10:40 a. m.) @Angela Ortiz Peña')
+    expect(construir('regreso', en(15, 45))).toBe('▶️ Buenas tardes, regreso (3:45 p. m.) @Angela Ortiz Peña')
+    expect(construir('fin', en(19, 5))).toBe('🌇 Buenas tardes, termino mi jornada (7:05 p. m.) @Angela Ortiz Peña')
   })
 
   it('al finalizar con tiempo de más usa la plantilla de recuperación', () => {
     const fin = (recuperadoMs: number): string =>
       construirMensaje(plantillas, 'fin', { fecha: en(19, 30), mencion, recuperadoMs })
-    expect(fin(90 * 60_000)).toBe('⏱️ Buenas tardes, termino mi jornada y recupero 1 hora y 30 minutos de hoy @Angela Ortiz Peña')
-    expect(fin(RECUPERACION_MINIMA_MS)).toBe('⏱️ Buenas tardes, termino mi jornada y recupero 1 minuto de hoy @Angela Ortiz Peña')
+    expect(fin(90 * 60_000)).toBe('⏱️ Buenas tardes, termino mi jornada (7:30 p. m.) y recupero 1 hora y 30 minutos de hoy @Angela Ortiz Peña')
+    expect(fin(RECUPERACION_MINIMA_MS)).toBe('⏱️ Buenas tardes, termino mi jornada (7:30 p. m.) y recupero 1 minuto de hoy @Angela Ortiz Peña')
     // Menos de un minuto, o cero: mensaje normal.
-    expect(fin(59_000)).toBe('🌇 Buenas tardes, termino mi jornada @Angela Ortiz Peña')
-    expect(fin(0)).toBe('🌇 Buenas tardes, termino mi jornada @Angela Ortiz Peña')
+    expect(fin(59_000)).toBe('🌇 Buenas tardes, termino mi jornada (7:30 p. m.) @Angela Ortiz Peña')
+    expect(fin(0)).toBe('🌇 Buenas tardes, termino mi jornada (7:30 p. m.) @Angela Ortiz Peña')
   })
 
   it('el tiempo de más solo cambia el mensaje de fin de jornada', () => {
     expect(construirMensaje(plantillas, 'regreso', { fecha: en(15, 0), mencion, recuperadoMs: 3_600_000 })).toBe(
-      '▶️ Buenas tardes, regreso @Angela Ortiz Peña'
+      '▶️ Buenas tardes, regreso (3:00 p. m.) @Angela Ortiz Peña'
     )
   })
 

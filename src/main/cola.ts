@@ -188,7 +188,10 @@ export class Cola {
   private textoParaEnviar(evento: Evento): string {
     const ocurrido = new Date(milisegundosDe(evento.ocurridoEn))
     if (this.ahora().getTime() - ocurrido.getTime() <= UMBRAL_RETRASO_MS) return evento.mensaje
-    return `${evento.mensaje} (registrado a las ${formatearHora(ocurrido)})`
+    const hora = formatearHora(ocurrido)
+    // Las plantillas con {hora} ya traen la hora del evento: no se repite.
+    if (evento.mensaje.includes(hora)) return evento.mensaje
+    return `${evento.mensaje} (registrado a las ${hora})`
   }
 }
 

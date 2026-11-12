@@ -119,7 +119,7 @@ describe('Programador', () => {
       irA(13, 0, 1)
       await programador.procesarVencidos()
       expect(controlador.estado()).toBe('trabajando')
-      expect(publicador.mensajes.at(-1)).toBe('🍽️ Buenas tardes, termino mi hora de almuerzo @Angela Ortiz Peña')
+      expect(publicador.mensajes.at(-1)).toBe('🍽️ Buenas tardes, termino mi hora de almuerzo (1:00 p. m.) @Angela Ortiz Peña')
       const programado = historial.obtenerProgramado(1)
       expect(programado).toMatchObject({ estado: 'ejecutado', nota: null })
       expect(programado.eventoId).not.toBeNull()
@@ -223,7 +223,7 @@ describe('Programador', () => {
       programador.programar({ tipo: 'ausencia', hora: '10:00' })
       irA(10, 0)
       await programador.procesarVencidos()
-      expect(publicador.mensajes.at(-1)).toBe('⏸️ Buenos días, me ausento un momento @Angela Ortiz Peña')
+      expect(publicador.mensajes.at(-1)).toBe('⏸️ Buenos días, me ausento un momento (10:00 a. m.) @Angela Ortiz Peña')
     })
   })
 
@@ -286,8 +286,8 @@ describe('Programador', () => {
     irA(10, 30)
     await programador.procesarVencidos()
     expect(publicador.mensajes.slice(-2)).toEqual([
-      '⏸️ Buenos días, me ausento un momento @Angela Ortiz Peña',
-      '▶️ Buenos días, regreso @Angela Ortiz Peña'
+      '⏸️ Buenos días, me ausento un momento (10:30 a. m.) @Angela Ortiz Peña',
+      '▶️ Buenos días, regreso (10:30 a. m.) @Angela Ortiz Peña'
     ])
     expect(controlador.estado()).toBe('trabajando')
   })

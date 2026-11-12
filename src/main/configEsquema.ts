@@ -4,13 +4,25 @@ import { z } from 'zod'
 const horaHHMM = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Se espera el formato HH:MM')
 
 /** Versión actual del formato de config.json (ver migrarConfig). */
-export const VERSION_CONFIG = 4
+export const VERSION_CONFIG = 5
 
 /**
  * Variables: {saludo} es "Buenos días" o "Buenas tardes" según la hora; {sol} es 🌅 por la mañana y 🌇 por la tarde;
- * {mencion} es "@" más teams.mencionar; {tiempo} (solo en finConRecuperacion) es el tiempo trabajado de más.
+ * {hora} es la hora del evento, p. ej. 8:02 a. m.; {mencion} es "@" más teams.mencionar; {tiempo} (solo en finConRecuperacion) es el tiempo de más:
+ * lo que se trabajó sobre la meta o lo que se salió después de la hora de salida planeada (p. ej. al recuperar una ausencia).
  */
 const PLANTILLAS_POR_DEFECTO = {
+  inicio: '{sol} {saludo}, inicio mi jornada ({hora}) {mencion}',
+  almuerzo: '🍲 {saludo}, inicio mi hora de almuerzo ({hora}) {mencion}',
+  regresoAlmuerzo: '🍽️ {saludo}, termino mi hora de almuerzo ({hora}) {mencion}',
+  ausencia: '⏸️ {saludo}, me ausento un momento ({hora}) {mencion}',
+  regreso: '▶️ {saludo}, regreso ({hora}) {mencion}',
+  fin: '{sol} {saludo}, termino mi jornada ({hora}) {mencion}',
+  finConRecuperacion: '⏱️ {saludo}, termino mi jornada ({hora}) y recupero {tiempo} de hoy {mencion}'
+} as const
+
+/** Las plantillas por defecto de la v4 (sin la hora), para que migrarConfig reconozca las que nadie editó. */
+const PLANTILLAS_V4 = {
   inicio: '{sol} {saludo}, inicio mi jornada {mencion}',
   almuerzo: '🍲 {saludo}, inicio mi hora de almuerzo {mencion}',
   regresoAlmuerzo: '🍽️ {saludo}, termino mi hora de almuerzo {mencion}',
@@ -149,6 +161,7 @@ function quitarPlantillasSinEditar(
  * - v2 → v3: los mensajes pasaron a saludar y mencionar a una persona. Las plantillas que sigan iguales a
  *   las de la v2 se quitan para que rijan las nuevas.
  * - v3 → v4: los mensajes ganaron un emoji. Lo mismo con las plantillas iguales a las de la v3.
+ * - v4 → v5: los mensajes ganaron la hora del evento. Lo mismo con las plantillas iguales a las de la v4.
  * En todos los casos nadie pudo haber elegido esos valores (aún no hay pantalla de configuración); cualquier
  * otro valor se respeta, y al quedar en la versión actual no se toca más.
  */
@@ -164,6 +177,10 @@ export function migrarConfig(crudo: unknown): unknown {
     config = quitarPlantillasSinEditar(config, PLANTILLAS_V2, 3)
     version = 3
   }
-  if (version < 4) config = quitarPlantillasSinEditar(config, PLANTILLAS_V3, 4)
+  if (version < 4) {
+    config = quitarPlantillasSinEditar(config, PLANTILLAS_V3, 4)
+    version = 4
+  }
+  if (version < 5) config = quitarPlantillasSinEditar(config, PLANTILLAS_V4, 5)
   return config
 }

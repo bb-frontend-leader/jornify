@@ -16,15 +16,15 @@ Cada acción publica un mensaje en el canal configurado y lo guarda en el histor
 
 | Acción | Disponible cuando el estado es | Nuevo estado | Mensaje de ejemplo |
 | --- | --- | --- | --- |
-| Iniciar jornada | Fuera de jornada | Trabajando | 🌅 Buenos días, inicio mi jornada @Angela Ortiz Peña |
-| Salir a almorzar | Trabajando | En almuerzo | 🍲 Buenas tardes, inicio mi hora de almuerzo @Angela Ortiz Peña |
-| Regresar de almuerzo | En almuerzo | Trabajando | 🍽️ Buenas tardes, termino mi hora de almuerzo @Angela Ortiz Peña |
-| Ausentarme | Trabajando | Ausente | ⏸️ Buenas tardes, me ausento un momento @Angela Ortiz Peña |
-| Regresar | Ausente | Trabajando | ▶️ Buenas tardes, regreso @Angela Ortiz Peña |
-| Finalizar jornada | Trabajando | Fuera de jornada | 🌇 Buenas tardes, termino mi jornada @Angela Ortiz Peña |
-| Finalizar jornada (con tiempo de más) | Trabajando | Fuera de jornada | ⏱️ Buenas tardes, termino mi jornada y recupero 1 hora y 30 minutos de hoy @Angela Ortiz Peña |
+| Iniciar jornada | Fuera de jornada | Trabajando | 🌅 Buenos días, inicio mi jornada (8:02 a. m.) @Angela Ortiz Peña |
+| Salir a almorzar | Trabajando | En almuerzo | 🍲 Buenas tardes, inicio mi hora de almuerzo (12:30 p. m.) @Angela Ortiz Peña |
+| Regresar de almuerzo | En almuerzo | Trabajando | 🍽️ Buenas tardes, termino mi hora de almuerzo (1:30 p. m.) @Angela Ortiz Peña |
+| Ausentarme | Trabajando | Ausente | ⏸️ Buenas tardes, me ausento un momento (3:10 p. m.) @Angela Ortiz Peña |
+| Regresar | Ausente | Trabajando | ▶️ Buenas tardes, regreso (3:40 p. m.) @Angela Ortiz Peña |
+| Finalizar jornada | Trabajando | Fuera de jornada | 🌇 Buenas tardes, termino mi jornada (7:00 p. m.) @Angela Ortiz Peña |
+| Finalizar jornada (con tiempo de más) | Trabajando | Fuera de jornada | ⏱️ Buenas tardes, termino mi jornada (7:30 p. m.) y recupero 30 minutos de hoy @Angela Ortiz Peña |
 
-El saludo es "Buenos días" antes de las 12:00 y "Buenas tardes" desde entonces; al inicio y al fin el emoji (`{sol}`) es un amanecer 🌅 por la mañana y un atardecer 🌇 por la tarde, y el resto lleva uno fijo (🍲 almuerzo, 🍽️ plato vacío al regresar de almorzar, ⏸️ ausencia, ▶️ regreso, ⏱️ recuperación). Si al finalizar se trabajó al menos un minuto más que la meta del día, se usa el mensaje de recuperación con ese tiempo de más. El motivo de la ausencia se guarda en el historial, pero la plantilla por defecto no lo muestra.
+El saludo es "Buenos días" antes de las 12:00 y "Buenas tardes" desde entonces; al inicio y al fin el emoji (`{sol}`) es un amanecer 🌅 por la mañana y un atardecer 🌇 por la tarde, y el resto lleva uno fijo (🍲 almuerzo, 🍽️ plato vacío al regresar de almorzar, ⏸️ ausencia, ▶️ regreso, ⏱️ recuperación). Todos los mensajes llevan la hora del evento entre paréntesis (`{hora}`, p. ej. "(8:02 a. m.)"), porque Teams agrupa los mensajes seguidos y la hora de cada uno deja de verse. Al finalizar se usa el mensaje de recuperación si hay al menos un minuto de tiempo de más, que suma lo trabajado sobre la meta del día y la ausencia recuperada: el tiempo que se sale después de la hora de salida planeada (los lunes, con el recorte), hasta lo que duraron las ausencias del día. Con 30 minutos ausente la meta se cumple 30 minutos después de la salida (7:00 p. m. pasa a 7:30 p. m.) y el mensaje dice que se recuperan esos 30 minutos; salir tarde sin haberse ausentado no cuenta como recuperación (solo cuenta lo trabajado sobre la meta). El motivo de la ausencia se guarda en el historial, pero la plantilla por defecto no lo muestra.
 
 ### Comportamiento
 
@@ -102,7 +102,7 @@ Los antiguos "Incoming Webhooks" (conectores de Office 365) dejaron de funcionar
 - Hilo de la jornada: cada **inicio de jornada** se publica como un mensaje nuevo del canal (con su propio id) y los mensajes que le siguen (almuerzo, regreso, ausencia, fin…) como respuestas a él: `POST .../messages/{message-id}/replies` (mismo permiso `ChannelMessage.Send`). El `fin` es la última respuesta; el siguiente inicio abre otro hilo, también el mismo día. El id que devuelve Graph se guarda en el historial (`teams_mensaje_id`, `teams_es_raiz`) y cada mensaje responde al último hilo abierto a la hora de su evento (no a la del envío, y sin importar el cambio de día). Si no hay hilo abierto, o la respuesta da 404 (el mensaje se borró o se cambió de canal), el mensaje se publica como uno nuevo y ese abre el hilo. `teams.respuestasEnHilo` (por defecto `true`) lo desactiva; se cambia con la casilla "Responder en el hilo de cada jornada en Teams" de Ajustes > General y rige para los mensajes que se publiquen desde ese momento.
 - Opción "Cerrar sesión" en configuración, que borra la caché de tokens (`tokens.bin`, cifrada con `safeStorage`).
 - **Menciones reales:** `{mencion}` se envía como `<at id="0">Nombre</at>` más un arreglo `mentions` con el id del usuario (`GET /users?$filter=displayName eq ...`). Si falta el permiso, no se encuentra a la persona o hay más de una coincidencia, el mensaje sale igual con "@Nombre" como texto.
-- **Cola con reintentos:** los eventos `pendiente` del historial son la cola; se entregan en orden cronológico y, si uno falla, los siguientes esperan para no desordenar el canal. Espera entre intentos 15 s, 30 s, 1 min, 2 min y 5 min (se repite la última). Si falta iniciar sesión o elegir canal no se cuentan intentos ni se programan temporizadores: se entrega al quedar listo. Un error sin remedio (p. ej. 403) pasa a `fallido` tras 3 intentos y la cola sigue; los errores de red nunca. Un mensaje entregado con más de 5 min de retraso lleva al final "(registrado a las H:MM)".
+- **Cola con reintentos:** los eventos `pendiente` del historial son la cola; se entregan en orden cronológico y, si uno falla, los siguientes esperan para no desordenar el canal. Espera entre intentos 15 s, 30 s, 1 min, 2 min y 5 min (se repite la última). Si falta iniciar sesión o elegir canal no se cuentan intentos ni se programan temporizadores: se entrega al quedar listo. Un error sin remedio (p. ej. 403) pasa a `fallido` tras 3 intentos y la cola sigue; los errores de red nunca. Un mensaje entregado con más de 5 min de retraso lleva al final "(registrado a las H:MM)", salvo que ya traiga esa hora (las plantillas por defecto llevan `({hora})`).
 
 ### Webhook: detalles
 
@@ -226,13 +226,13 @@ El estado actual de la jornada se deriva del último evento del día; no se guar
     "descontarAusencias": true
   },
   "plantillas": {
-    "inicio": "{sol} {saludo}, inicio mi jornada {mencion}",
-    "almuerzo": "🍲 {saludo}, inicio mi hora de almuerzo {mencion}",
-    "regresoAlmuerzo": "🍽️ {saludo}, termino mi hora de almuerzo {mencion}",
-    "ausencia": "⏸️ {saludo}, me ausento un momento {mencion}",
-    "regreso": "▶️ {saludo}, regreso {mencion}",
-    "fin": "{sol} {saludo}, termino mi jornada {mencion}",
-    "finConRecuperacion": "⏱️ {saludo}, termino mi jornada y recupero {tiempo} de hoy {mencion}"
+    "inicio": "{sol} {saludo}, inicio mi jornada ({hora}) {mencion}",
+    "almuerzo": "🍲 {saludo}, inicio mi hora de almuerzo ({hora}) {mencion}",
+    "regresoAlmuerzo": "🍽️ {saludo}, termino mi hora de almuerzo ({hora}) {mencion}",
+    "ausencia": "⏸️ {saludo}, me ausento un momento ({hora}) {mencion}",
+    "regreso": "▶️ {saludo}, regreso ({hora}) {mencion}",
+    "fin": "{sol} {saludo}, termino mi jornada ({hora}) {mencion}",
+    "finConRecuperacion": "⏱️ {saludo}, termino mi jornada ({hora}) y recupero {tiempo} de hoy {mencion}"
   },
   "app": {
     "iniciarConWindows": true,

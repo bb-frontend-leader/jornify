@@ -73,7 +73,7 @@ describe('Controlador', () => {
   it('registra la acción en el historial, la publica con la hora del evento y la marca como enviada', async () => {
     const { evento, publicado } = await controlador.ejecutar('inicio')
     expect(publicado).toBe(true)
-    const esperado = '🌅 Buenos días, inicio mi jornada @Angela Ortiz Peña'
+    const esperado = '🌅 Buenos días, inicio mi jornada (8:02 a. m.) @Angela Ortiz Peña'
     expect(publicador.mensajes).toEqual([esperado])
     expect(publicador.contextos[0]?.ocurridoEn).toEqual(reloj)
     expect(evento).toMatchObject({ tipo: 'inicio', estadoEnvio: 'enviado', mensaje: esperado })
@@ -109,7 +109,7 @@ describe('Controlador', () => {
     avanzar(15, 10)
     const { evento } = await controlador.ejecutar('ausencia', '  Cita médica ')
     expect(evento.motivo).toBe('Cita médica')
-    expect(publicador.mensajes.at(-1)).toBe('⏸️ Buenas tardes, me ausento un momento @Angela Ortiz Peña')
+    expect(publicador.mensajes.at(-1)).toBe('⏸️ Buenas tardes, me ausento un momento (3:10 p. m.) @Angela Ortiz Peña')
   })
 
   it('cada acción saluda según la hora y menciona a la persona configurada', async () => {
@@ -123,11 +123,11 @@ describe('Controlador', () => {
     avanzar(15, 40)
     await controlador.ejecutar('regreso')
     expect(publicador.mensajes).toEqual([
-      '🌅 Buenos días, inicio mi jornada @Angela Ortiz Peña',
-      '🍲 Buenas tardes, inicio mi hora de almuerzo @Angela Ortiz Peña',
-      '🍽️ Buenas tardes, termino mi hora de almuerzo @Angela Ortiz Peña',
-      '⏸️ Buenas tardes, me ausento un momento @Angela Ortiz Peña',
-      '▶️ Buenas tardes, regreso @Angela Ortiz Peña'
+      '🌅 Buenos días, inicio mi jornada (8:02 a. m.) @Angela Ortiz Peña',
+      '🍲 Buenas tardes, inicio mi hora de almuerzo (12:30 p. m.) @Angela Ortiz Peña',
+      '🍽️ Buenas tardes, termino mi hora de almuerzo (1:30 p. m.) @Angela Ortiz Peña',
+      '⏸️ Buenas tardes, me ausento un momento (3:10 p. m.) @Angela Ortiz Peña',
+      '▶️ Buenas tardes, regreso (3:40 p. m.) @Angela Ortiz Peña'
     ])
   })
 
@@ -135,7 +135,7 @@ describe('Controlador', () => {
     await controlador.ejecutar('inicio') // 8:02
     avanzar(18, 2) // exactamente 10 h
     await controlador.ejecutar('fin')
-    expect(publicador.mensajes.at(-1)).toBe('🌇 Buenas tardes, termino mi jornada @Angela Ortiz Peña')
+    expect(publicador.mensajes.at(-1)).toBe('🌇 Buenas tardes, termino mi jornada (6:02 p. m.) @Angela Ortiz Peña')
   })
 
   it('al finalizar con tiempo de más anuncia cuánto recupera', async () => {
@@ -143,7 +143,7 @@ describe('Controlador', () => {
     avanzar(19, 32) // 11 h 30 min de reloj
     await controlador.ejecutar('fin')
     expect(publicador.mensajes.at(-1)).toBe(
-      '⏱️ Buenas tardes, termino mi jornada y recupero 1 hora y 30 minutos de hoy @Angela Ortiz Peña'
+      '⏱️ Buenas tardes, termino mi jornada (7:32 p. m.) y recupero 1 hora y 30 minutos de hoy @Angela Ortiz Peña'
     )
   })
 
@@ -153,7 +153,7 @@ describe('Controlador', () => {
     reloj = new Date(2026, 10, 9, 17, 45) // 9 h 45 min
     await controlador.ejecutar('fin')
     expect(publicador.mensajes.at(-1)).toBe(
-      '⏱️ Buenas tardes, termino mi jornada y recupero 45 minutos de hoy @Angela Ortiz Peña'
+      '⏱️ Buenas tardes, termino mi jornada (5:45 p. m.) y recupero 45 minutos de hoy @Angela Ortiz Peña'
     )
   })
 
@@ -161,7 +161,7 @@ describe('Controlador', () => {
     const config = { ...configPorDefecto(), teams: { ...configPorDefecto().teams, mencionar: '' } }
     const sinMencion = new Controlador({ historial, publicador, obtenerConfig: () => config, ahora: () => reloj })
     await sinMencion.ejecutar('inicio')
-    expect(publicador.mensajes.at(-1)).toBe('🌅 Buenos días, inicio mi jornada')
+    expect(publicador.mensajes.at(-1)).toBe('🌅 Buenos días, inicio mi jornada (8:02 a. m.)')
   })
 
   it('ignora el motivo en acciones que no son ausencias', async () => {
@@ -195,9 +195,9 @@ describe('Controlador', () => {
     await controlador.cola.reintentarAhora()
     expect(historial.pendientes()).toHaveLength(0)
     expect(publicador.mensajes).toEqual([
-      '🌅 Buenos días, inicio mi jornada @Angela Ortiz Peña (registrado a las 8:02 a. m.)',
-      '🍲 Buenas tardes, inicio mi hora de almuerzo @Angela Ortiz Peña (registrado a las 12:00 p. m.)',
-      '🍽️ Buenas tardes, termino mi hora de almuerzo @Angela Ortiz Peña (registrado a las 1:00 p. m.)'
+      '🌅 Buenos días, inicio mi jornada (8:02 a. m.) @Angela Ortiz Peña',
+      '🍲 Buenas tardes, inicio mi hora de almuerzo (12:00 p. m.) @Angela Ortiz Peña',
+      '🍽️ Buenas tardes, termino mi hora de almuerzo (1:00 p. m.) @Angela Ortiz Peña'
     ])
     expect(publicador.contextos.map((c) => c.ocurridoEn.getHours())).toEqual([8, 12, 13])
   })
@@ -257,6 +257,82 @@ describe('Controlador', () => {
     const foto = conConfig.instantanea()
     expect(foto.siempreVisible).toBe(true)
     expect(foto.objetivoMs).toBe(6 * HORA)
+  })
+})
+
+describe('Controlador: tiempo de más al recuperar una ausencia', () => {
+  /** Jornada de un viernes: entra a las 8:00, almuerza de 12:00 a 13:00 y se ausenta 30 minutos de 15:00 a 15:30. */
+  async function jornadaConAusencia(horaFin: [number, number]): Promise<string> {
+    const historial = Historial.abrir(':memory:')
+    const publicador = new PublicadorFalso()
+    let reloj = new Date(2026, 10, 6, 8, 0)
+    const controlador = new Controlador({ historial, publicador, obtenerConfig: configPorDefecto, ahora: () => reloj, nombre: 'Ale', registrarError: () => undefined })
+    for (const [tipo, h, m] of [['inicio', 8, 0], ['almuerzo', 12, 0], ['regreso_almuerzo', 13, 0], ['ausencia', 15, 0], ['regreso', 15, 30]] as const) {
+      reloj = new Date(2026, 10, 6, h, m)
+      await controlador.ejecutar(tipo)
+    }
+    reloj = new Date(2026, 10, 6, horaFin[0], horaFin[1])
+    await controlador.ejecutar('fin')
+    return publicador.mensajes.at(-1) ?? ''
+  }
+
+  it('con 30 minutos ausente la salida pasa de las 7:00 a las 7:30 p. m. y el mensaje dice que recupera esos 30 minutos', async () => {
+    expect(await jornadaConAusencia([19, 30])).toBe(
+      '⏱️ Buenas tardes, termino mi jornada (7:30 p. m.) y recupero 30 minutos de hoy @Angela Ortiz Peña'
+    )
+  })
+
+  it('si sale a la hora de siempre, sin recuperar la ausencia, el mensaje es el normal', async () => {
+    expect(await jornadaConAusencia([19, 0])).toBe('🌇 Buenas tardes, termino mi jornada (7:00 p. m.) @Angela Ortiz Peña')
+  })
+
+  it('cuenta lo que se recupera de la ausencia aunque lo trabajado aún no llegue a la meta', async () => {
+    expect(await jornadaConAusencia([19, 15])).toBe(
+      '⏱️ Buenas tardes, termino mi jornada (7:15 p. m.) y recupero 15 minutos de hoy @Angela Ortiz Peña'
+    )
+  })
+
+  it('el tiempo trabajado de más y la ausencia recuperada se suman', async () => {
+    // 30 min ausente: la meta se cumple a las 7:30 p. m.; a las 7:45 hay 15 min trabajados de más y 30 de ausencia recuperada.
+    expect(await jornadaConAusencia([19, 45])).toBe(
+      '⏱️ Buenas tardes, termino mi jornada (7:45 p. m.) y recupero 45 minutos de hoy @Angela Ortiz Peña'
+    )
+  })
+
+  it('sin ausencias, salir después de la hora de salida no cuenta como recuperación si lo trabajado no pasa la meta', async () => {
+    const historial = Historial.abrir(':memory:')
+    const publicador = new PublicadorFalso()
+    let reloj = new Date(2026, 10, 6, 9, 0)
+    const controlador = new Controlador({ historial, publicador, obtenerConfig: configPorDefecto, ahora: () => reloj, nombre: 'Ale', registrarError: () => undefined })
+    // Llegó una hora tarde: 9:00 a 20:00 con 1 h de almuerzo son 10 h netas, así que no hay tiempo de más.
+    for (const [tipo, h] of [['inicio', 9], ['almuerzo', 13], ['regreso_almuerzo', 14], ['fin', 20]] as const) {
+      reloj = new Date(2026, 10, 6, h, 0)
+      await controlador.ejecutar(tipo)
+    }
+    expect(publicador.mensajes.at(-1)).toBe('🌇 Buenas tardes, termino mi jornada (8:00 p. m.) @Angela Ortiz Peña')
+  })
+
+  it('si las ausencias cuentan como trabajadas no hay nada que recuperar', async () => {
+    const config = configPorDefecto()
+    const historial = Historial.abrir(':memory:')
+    const publicador = new PublicadorFalso()
+    let reloj = new Date(2026, 10, 6, 8, 0)
+    const controlador = new Controlador({
+      historial,
+      publicador,
+      obtenerConfig: () => ({ ...config, horario: { ...config.horario, descontarAusencias: false } }),
+      ahora: () => reloj,
+      nombre: 'Ale',
+      registrarError: () => undefined
+    })
+    for (const [tipo, h, m] of [['inicio', 8, 0], ['ausencia', 15, 0], ['regreso', 15, 30], ['fin', 19, 15]] as const) {
+      reloj = new Date(2026, 10, 6, h, m)
+      await controlador.ejecutar(tipo)
+    }
+    // 11 h 15 min de reloj, todas trabajadas: 1 h 15 min sobre la meta, sin sumar la ausencia.
+    expect(publicador.mensajes.at(-1)).toBe(
+      '⏱️ Buenas tardes, termino mi jornada (7:15 p. m.) y recupero 1 hora y 15 minutos de hoy @Angela Ortiz Peña'
+    )
   })
 })
 

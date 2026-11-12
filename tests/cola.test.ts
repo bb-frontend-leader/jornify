@@ -154,6 +154,13 @@ describe('Cola', () => {
     expect(cola.estado().bloqueo).toBeNull()
   })
 
+  it('si el mensaje ya trae la hora del evento no se le agrega "registrado a las"', async () => {
+    registrar('inicio', en(8, 0), 'Buenos días, inicio mi jornada (8:00 a. m.)')
+    reloj = en(9, 0)
+    await cola.procesar()
+    expect(publicador.enviados).toEqual(['Buenos días, inicio mi jornada (8:00 a. m.)'])
+  })
+
   it('un mensaje con retraso lleva la hora original, y uno reciente no', async () => {
     registrar('inicio', en(8, 0))
     reloj = new Date(en(8, 0).getTime() + UMBRAL_RETRASO_MS - 1000)

@@ -149,11 +149,24 @@ export class Controlador {
     return { evento, publicado }
   }
 
-  /** Tiempo trabajado por encima de la meta del día hasta ese instante (0 si aún no se llega). */
+  /**
+   * Tiempo de más con el que se cierra la jornada en ese instante (0 si no lo hay): lo trabajado por encima de la
+   * meta del día más el tiempo de ausencia que se recuperó saliendo después de la hora de salida planeada (los lunes,
+   * con el recorte). Con 30 minutos ausente la meta se cumple 30 minutos después de la salida, y esos 30 minutos
+   * cuentan como de más aunque lo trabajado justo iguale la meta; no pasa con quien sale tarde sin haberse ausentado.
+   */
   private tiempoExtraAl(instante: Date, config: Config): number {
     const eventos = this.dependencias.historial.eventosDelDia(instante)
     const jornadaObjetivoHoras = jornadaObjetivoDelDia(config.horario, instante)
-    return calcularTiempo(eventos, instante, { ...config.horario, jornadaObjetivoHoras }).extraMs
+    const trabajadoDeMas = calcularTiempo(eventos, instante, { ...config.horario, jornadaObjetivoHoras }).extraMs
+    if (!config.horario.descontarAusencias) return trabajadoDeMas // la ausencia ya cuenta como trabajada
+    const ausenteMs = calcularTramos(eventos)
+      .filter((tramo) => tramo.estado === 'ausente')
+      .reduce((suma, tramo) => suma + Math.max(0, (tramo.hastaMs ?? instante.getTime()) - tramo.desdeMs), 0)
+    const recorteMs = recorteDelDia(instante, config.horario.recorteLunesHoras) * 3_600_000
+    const salidaPlaneadaMs = horaDelDia(instante, config.horario.horaSalida).getTime() - recorteMs
+    const pasadoDeLaSalidaMs = Math.max(0, instante.getTime() - salidaPlaneadaMs)
+    return trabajadoDeMas + Math.min(ausenteMs, pasadoDeLaSalidaMs)
   }
 
   /** Avisa a los oyentes que la instantánea cambió. */
