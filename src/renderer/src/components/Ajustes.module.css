@@ -201,6 +201,15 @@
   padding-top: 4px;
 }
 
+/* La versión instalada, para saber cuál se tiene. */
+.version {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--suave);
+  user-select: text;
+}
+
 .nota {
   margin: -6px 0 0 24px;
   font-size: 12px;

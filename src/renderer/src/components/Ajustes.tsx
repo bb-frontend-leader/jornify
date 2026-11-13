@@ -85,13 +85,17 @@ export default function Ajustes({ onVolver, onTemaDePrueba }: Props): React.JSX.
   const [guardando, setGuardando] = useState(false)
   const [pestana, setPestana] = useState<'jornada' | 'mensajes' | 'general'>('jornada')
   const [empaquetada, setEmpaquetada] = useState(true)
+  const [version, setVersion] = useState('')
 
   useEffect(() => {
     void window.jornify.obtenerAjustes().then((datos) => {
       setVista(datos)
       setFormulario(aFormulario(datos.actuales))
     })
-    void window.jornify.info().then((info) => setEmpaquetada(info.empaquetada))
+    void window.jornify.info().then((info) => {
+      setEmpaquetada(info.empaquetada)
+      setVersion(info.version)
+    })
   }, [])
 
   // El tema elegido se ve al instante; al salir sin guardar se quita la prueba.
@@ -222,7 +226,7 @@ export default function Ajustes({ onVolver, onTemaDePrueba }: Props): React.JSX.
               <input type="checkbox" checked={formulario.iniciarWindows} onChange={(e) => cambiar({ iniciarWindows: e.target.checked })} />
               Abrir Jornify al iniciar sesión en Windows
             </label>
-            {!empaquetada && <p className={estilos.nota}>En desarrollo no se registra en Windows: solo funciona en la app instalada.</p>}
+            {!empaquetada && <p className={estilos.nota}>Solo funciona en la app instalada, no en desarrollo.</p>}
             <label className={estilos.casilla}>
               <input type="checkbox" checked={formulario.enHilo} onChange={(e) => cambiar({ enHilo: e.target.checked })} />
               Responder en el hilo de cada jornada en Teams
@@ -243,6 +247,12 @@ export default function Ajustes({ onVolver, onTemaDePrueba }: Props): React.JSX.
               <input type="checkbox" checked={formulario.recordarAlmuerzo} onChange={(e) => cambiar({ recordarAlmuerzo: e.target.checked })} />
               Avisar si el almuerzo se pasa de la duración
             </label>
+            {version && (
+              <p className={estilos.version}>
+                Jornify {version}
+                {!empaquetada && ' (desarrollo)'}
+              </p>
+            )}
           </div>
         )}
 
