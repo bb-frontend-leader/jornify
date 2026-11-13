@@ -1,6 +1,6 @@
 {
   "name": "jornify",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Jornify: registra tu jornada laboral en un canal de Microsoft Teams desde la bandeja de Windows",
   "main": "./out/main/index.js",
   "author": "Alejandro",
