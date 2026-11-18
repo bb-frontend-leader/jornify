@@ -33,7 +33,7 @@ El saludo es "Buenos días" antes de las 12:00 y "Buenas tardes" desde entonces;
 - **Plantillas editables** de cada mensaje, con variables `{saludo}`, `{sol}`, `{hora}`, `{fecha}`, `{nombre}`, `{mencion}`, `{tiempo}` (solo en el fin con recuperación) y `{motivo}`.
 - **Mensajes programados** (campana de la cabecera del reloj): el usuario elige una acción (p. ej. "Ausentarme"), una hora de hoy y, si quiere, un texto propio (admite las variables de las plantillas; vacío usa la plantilla de siempre). A esa hora la app registra la acción de verdad: cambia el estado, pausa o reanuda el reloj, guarda el evento en el historial y publica el mensaje. Se puede cancelar mientras esté pendiente. Reglas: solo de hoy y una sola vez; si a la hora de ejecutarse la acción ya no es válida en el estado de la jornada, se omite y se explica por qué; si la app estaba cerrada o el equipo suspendido y se descubre con más de 10 min de retraso, también se omite (no se publica tarde).
 - **Reporte en Excel** (enlace "Exportar a Excel" del Historial; ya no hay botón propio en la cabecera, y "volver" regresa al Historial): "Exportar a Excel" para hoy, la semana (lunes a domingo), el mes o dos fechas (máximo 366 días). Pide dónde guardar un `.xlsx` con dos hojas. **Resumen:** una fila por día con registros (fecha, día, entrada, salida, almuerzo, ausencias, trabajado, meta del día, diferencia en horas decimales, observación) y una fila de totales. **Eventos:** cada acción con fecha, hora, acción, motivo, mensaje, estado de envío, hora de envío e intentos. Un día pasado sin cerrar cuenta solo hasta su último evento y se señala; la meta de cada día usa los ajustes de hoy (los lunes, con el recorte), cosa que se anota al pie del Resumen.
-- **Ajustes** (ícono de controles en la cabecera del reloj): hora de entrada, jornada en horas netas, recorte de los lunes, duración del almuerzo (minutos), regreso automático del almuerzo a quién mencionan los mensajes y si el reloj se abre al iniciar la app. Muestra la salida planeada (entrada + jornada + almuerzo; los lunes menos el recorte), valida los límites (jornada 1–16 h, recorte menor que la jornada, almuerzo 5–240 min, todo dentro del mismo día), tiene "Valores de fábrica" y al guardar el reloj se actualiza al momento. Lo ya programado no cambia: un regreso automático que ya está pendiente conserva su hora.
+- **Ajustes** (ícono de controles en la cabecera del reloj): hora de entrada, jornada en horas (con el almuerzo dentro), recorte de los lunes, duración del almuerzo (minutos), regreso automático del almuerzo a quién mencionan los mensajes y si el reloj se abre al iniciar la app. Muestra la salida planeada (entrada + jornada; los lunes menos el recorte), valida los límites (jornada 1–16 h, recorte menor que la jornada, almuerzo 5–240 min, todo dentro del mismo día), tiene "Valores de fábrica" y al guardar el reloj se actualiza al momento. Lo ya programado no cambia: un regreso automático que ya está pendiente conserva su hora.
 - **Mensajes editables** (pestaña "Mensajes" de Ajustes): cada uno de los siete mensajes se edita con atajos para insertar variables en el cursor, una vista previa con datos de ejemplo y "Texto de fábrica". Se rechazan los vacíos, los de más de 500 caracteres y las variables que no existen. Los cambios rigen para los mensajes que se registren desde ese momento; los ya registrados conservan su texto.
 - **Regreso del almuerzo automático:** al salir a almorzar se programa solo el regreso para `duracionAlmuerzoMin` después (60 min); se puede marcar antes a mano ("Regresar de almuerzo"), y entonces el automático se retira. Se desactiva con `horario.regresoAlmuerzoAutomatico: false`.
 - **Motivo opcional** al ausentarse, en un cuadro de texto pequeño.
@@ -49,7 +49,7 @@ El saludo es "Buenos días" antes de las 12:00 y "Buenas tardes" desde entonces;
 &#91;embedded content: ventana del reloj · boceto con valores de ejemplo\]
 
 - **Reloj digital** (HH:MM:SS) con el tiempo trabajado hoy, descontando almuerzo y ausencias. Se pausa en almuerzo o ausencia.
-- **Tiempo que falta** para completar la jornada objetivo (configurable, por defecto 10 h netas, sin contar el almuerzo; **los lunes se recorta 1 h**, es decir, 9 h). Al superarla, cambia a "Horas extra" con otro color.
+- **Tiempo que falta** para completar la jornada objetivo (configurable: por defecto una jornada de 10 h **con el almuerzo dentro**, es decir 9 h netas; **los lunes se recorta 1 h**, 8 h netas). La salida estimada cuenta el almuerzo previsto aunque aún no se haya tomado, así que no se corre al almorzar (solo se corre lo que el almuerzo se pase de su duración). Al superarla, cambia a "Horas extra" con otro color.
 - **Salida estimada:** hora actual más el tiempo que falta.
 - **Barra de progreso** de la jornada y **chip de estado** (Trabajando, En almuerzo, Ausente, Fuera de jornada).
 - **Botones** con las acciones válidas para el estado actual; son las mismas del menú de la bandeja.
@@ -218,7 +218,7 @@ El estado actual de la jornada se deriva del último evento del día; no se guar
   },
   "horario": {
     "horaEntrada": "08:00",
-    "horaSalida": "19:00",
+    "horaSalida": "18:00",
     "jornadaObjetivoHoras": 10,
     "recorteLunesHoras": 1,
     "duracionAlmuerzoMin": 60,
@@ -284,5 +284,5 @@ En las siguientes sesiones basta con pedir: "Implementa la Fase N de ESPECIFICAC
 - [x] Confirmar con TI si se permite registrar una app en Entra ID para iniciar sesión con Microsoft y enviar mensajes con Graph.
 - [ ] Definir el texto exacto que el equipo espera en el canal (formato y emojis).
 - [ ] Decidir si la app propone el fin de jornada automáticamente al apagar el PC.
-- [x] Jornada de 10 h netas sin contar el almuerzo; los lunes se recorta 1 h (9 h netas y la hora de salida planeada una hora antes). Con entrada a las 08:00 y 1 h de almuerzo, la salida por defecto es 19:00 (18:00 los lunes).
+- [x] Jornada de 10 h con el almuerzo dentro (9 h netas); los lunes se recorta 1 h (8 h netas y la hora de salida planeada una hora antes). Con entrada a las 08:00 la salida por defecto es 18:00 (17:00 los lunes). Tomar el almuerzo no alarga la jornada. (Antes eran 10 h netas más el almuerzo, salida 19:00.)
 - [ ] Confirmar la duración del almuerzo (hoy 60 min) y la hora de entrada (hoy 08:00).

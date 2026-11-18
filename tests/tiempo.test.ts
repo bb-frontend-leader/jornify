@@ -224,19 +224,19 @@ describe('escalaDelDia y marcasDeHora', () => {
 })
 
 describe('jornadaObjetivoDelDia y recorteDelDia', () => {
-  const horario = { jornadaObjetivoHoras: 10, recorteLunesHoras: 1 }
+  const horario = { jornadaObjetivoHoras: 10, recorteLunesHoras: 1, duracionAlmuerzoMin: 60 }
   const dia = (n: number): Date => new Date(2026, 10, n, 9, 0) // 9 nov 2026 es lunes
 
-  it('los lunes se recorta la jornada y el resto de los días no', () => {
+  it('la meta neta es la jornada menos el almuerzo; los lunes se recorta además y el resto de los días no', () => {
     expect(new Date(2026, 10, 9).getDay()).toBe(1)
-    expect(jornadaObjetivoDelDia(horario, dia(9))).toBe(9)
-    for (const n of [10, 11, 12, 13, 14, 15]) expect(jornadaObjetivoDelDia(horario, dia(n))).toBe(10)
+    expect(jornadaObjetivoDelDia(horario, dia(9))).toBe(8)
+    for (const n of [10, 11, 12, 13, 14, 15]) expect(jornadaObjetivoDelDia(horario, dia(n))).toBe(9)
     expect(recorteDelDia(dia(9), 1)).toBe(1)
     expect(recorteDelDia(dia(10), 1)).toBe(0)
   })
 
   it('admite recortes fraccionarios y nunca baja de 0', () => {
-    expect(jornadaObjetivoDelDia({ ...horario, recorteLunesHoras: 0.5 }, dia(9))).toBe(9.5)
-    expect(jornadaObjetivoDelDia({ jornadaObjetivoHoras: 1, recorteLunesHoras: 3 }, dia(9))).toBe(0)
+    expect(jornadaObjetivoDelDia({ ...horario, recorteLunesHoras: 0.5 }, dia(9))).toBe(8.5)
+    expect(jornadaObjetivoDelDia({ jornadaObjetivoHoras: 1, recorteLunesHoras: 3, duracionAlmuerzoMin: 60 }, dia(9))).toBe(0)
   })
 })

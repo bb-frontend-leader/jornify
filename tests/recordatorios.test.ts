@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { type Config, configPorDefecto } from '../src/main/configEsquema'
+import type { Config } from '../src/main/configEsquema'
+import { configPorDefecto } from './configDiezNetas'
 import type { TipoEvento } from '../src/main/estado'
 import { aIsoConZona } from '../src/main/fechas'
 import { Historial } from '../src/main/historial'

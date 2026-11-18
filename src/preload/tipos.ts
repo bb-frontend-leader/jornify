@@ -26,6 +26,10 @@ export interface Instantanea {
   /** Tiempo trabajado neto en el instante `calculadoEn`. */
   trabajadoMs: number
   objetivoMs: number
+  /** Almuerzo que aún no se toma (está dentro de la jornada: la salida estimada lo cuenta); 0 si ya se tomó o está en curso. */
+  almuerzoPorTomarMs: number
+  /** Si está en almuerzo, el instante en que termina el tiempo previsto (la salida estimada no se corre antes). */
+  almuerzoTerminaEnMs: number | null
   /** Marca de tiempo (ms desde la época) en que se calculó `trabajadoMs`. */
   calculadoEn: number
   /** ¿Está avanzando el tiempo trabajado en este estado? */

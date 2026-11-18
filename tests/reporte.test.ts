@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { configPorDefecto } from '../src/main/configEsquema'
+import { configPorDefecto } from './configDiezNetas'
 import type { TipoEvento } from '../src/main/estado'
 import { aIsoConZona } from '../src/main/fechas'
 import type { Evento } from '../src/main/historial'
@@ -172,7 +172,7 @@ describe('construirReporte', () => {
   })
 
   it('anota los ajustes con que se calculó la meta', () => {
-    expect(reporte).toMatchObject({ jornadaObjetivoHoras: 10, recorteLunesHoras: 1 })
+    expect(reporte).toMatchObject({ jornadaObjetivoHoras: 11, recorteLunesHoras: 1 })
   })
 
   it('un rango sin eventos da un reporte vacío', () => {

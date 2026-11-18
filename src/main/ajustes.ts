@@ -37,8 +37,11 @@ const esquemaAjustes = z
     if (ajustes.recorteLunesHoras >= ajustes.jornadaObjetivoHoras) {
       contexto.addIssue({ code: 'custom', message: 'El recorte de los lunes debe ser menor que la jornada' })
     }
-    if (salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras, ajustes.duracionAlmuerzoMin) === null) {
-      contexto.addIssue({ code: 'custom', message: 'Entrada, jornada y almuerzo no caben en el mismo día' })
+    if (ajustes.recorteLunesHoras + ajustes.duracionAlmuerzoMin / 60 >= ajustes.jornadaObjetivoHoras) {
+      contexto.addIssue({ code: 'custom', message: 'El almuerzo y el recorte de los lunes deben caber en la jornada' })
+    }
+    if (salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras) === null) {
+      contexto.addIssue({ code: 'custom', message: 'Entrada y jornada no caben en el mismo día' })
     }
   })
 
@@ -74,11 +77,11 @@ export function vistaDeAjustes(config: Config): AjustesVista {
 }
 
 /**
- * Config con los ajustes aplicados. La hora de salida se recalcula (entrada + jornada + almuerzo)
+ * Config con los ajustes aplicados. La hora de salida se recalcula (entrada + jornada, con el almuerzo dentro)
  * para que la línea del día y la salida planeada sigan al horario nuevo.
  */
 export function aplicarAjustes(config: Config, ajustes: Ajustes): Config {
-  const horaSalida = salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras, ajustes.duracionAlmuerzoMin)
+  const horaSalida = salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras)
   if (horaSalida === null) throw new RangeError('La jornada no cabe en el día')
   return {
     ...config,

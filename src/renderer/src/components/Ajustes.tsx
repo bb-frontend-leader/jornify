@@ -116,10 +116,10 @@ export default function Ajustes({ onVolver, onTemaDePrueba }: Props): React.JSX.
   const ajustes = aAjustes(formulario)
   const original = aFormulario(vista.actuales)
   const hayCambios = (Object.keys(original) as (keyof Formulario)[]).some((clave) => original[clave] !== formulario[clave])
-  const salida = salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras, ajustes.duracionAlmuerzoMin)
+  const salida = salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras)
   const salidaLunes =
     salida !== null && ajustes.recorteLunesHoras > 0
-      ? salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras - ajustes.recorteLunesHoras, ajustes.duracionAlmuerzoMin)
+      ? salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras - ajustes.recorteLunesHoras)
       : null
 
   async function guardar(evento: React.FormEvent): Promise<void> {
@@ -172,7 +172,7 @@ export default function Ajustes({ onVolver, onTemaDePrueba }: Props): React.JSX.
             <input type="time" required value={formulario.horaEntrada} onChange={(e) => cambiar({ horaEntrada: e.target.value })} />
           </label>
           <label>
-            Jornada (horas netas)
+            Jornada (horas con almuerzo)
             <input inputMode="decimal" required value={formulario.jornada} onChange={(e) => cambiar({ jornada: e.target.value })} />
           </label>
         </div>
@@ -197,13 +197,13 @@ export default function Ajustes({ onVolver, onTemaDePrueba }: Props): React.JSX.
 
         <p className={estilos.resumen}>
           {salida === null ? (
-            'Entrada, jornada y almuerzo no caben en el mismo día.'
+            'Entrada y jornada no caben en el mismo día.'
           ) : (
             <>
               Salida planeada <strong>{salida}</strong>
               {salidaLunes !== null && (
                 <>
-                  , los lunes <strong>{salidaLunes}</strong> ({horasEnTexto(ajustes.jornadaObjetivoHoras - ajustes.recorteLunesHoras)} netas)
+                  , los lunes <strong>{salidaLunes}</strong> ({horasEnTexto(ajustes.jornadaObjetivoHoras - ajustes.recorteLunesHoras)} con almuerzo)
                 </>
               )}
             </>

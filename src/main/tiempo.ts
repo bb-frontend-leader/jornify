@@ -42,7 +42,8 @@ export function derivarProgreso(
   trabajadoMs: number,
   jornadaObjetivoHoras: number,
   estado: EstadoJornada,
-  ahoraMs: number
+  ahoraMs: number,
+  almuerzo: PrevisionAlmuerzo = SIN_ALMUERZO
 ): ProgresoJornada {
   const objetivoMs = jornadaObjetivoHoras * MS_POR_HORA
   const restanteMs = Math.max(0, objetivoMs - trabajadoMs)
@@ -51,8 +52,24 @@ export function derivarProgreso(
     restanteMs,
     extraMs: Math.max(0, trabajadoMs - objetivoMs),
     progreso: objetivoMs > 0 ? Math.min(1, trabajadoMs / objetivoMs) : 1,
-    salidaEstimada: estado === 'fuera_de_jornada' ? null : new Date(ahoraMs + restanteMs)
+    salidaEstimada: estado === 'fuera_de_jornada' ? null : new Date(inicioDelTrabajoRestanteMs(ahoraMs, almuerzo) + restanteMs)
   }
+}
+
+/** Lo que falta de almuerzo, que está dentro de la jornada: la salida estimada lo cuenta para no correrse al tomarlo. */
+export interface PrevisionAlmuerzo {
+  /** Duración del almuerzo que aún no se toma (0 si ya se tomó o está en curso). */
+  porTomarMs: number
+  /** Instante en que termina el almuerzo previsto si está en curso; null si no. */
+  terminaEnMs: number | null
+}
+
+export const SIN_ALMUERZO: PrevisionAlmuerzo = { porTomarMs: 0, terminaEnMs: null }
+
+/** Desde cuándo corre el tiempo que falta trabajar: ahora más el almuerzo previsto que todavía queda. */
+function inicioDelTrabajoRestanteMs(ahoraMs: number, almuerzo: PrevisionAlmuerzo): number {
+  if (almuerzo.terminaEnMs !== null) return Math.max(ahoraMs, almuerzo.terminaEnMs)
+  return ahoraMs + almuerzo.porTomarMs
 }
 
 /**
@@ -156,20 +173,22 @@ export function marcasDeHora(escala: EscalaDia, maxMarcas = 5): number[] {
 }
 
 /**
- * Hora de salida planeada ("HH:MM"): entrada + jornada neta + almuerzo.
+ * Hora de salida planeada ("HH:MM"): entrada + jornada. El almuerzo está dentro de la jornada, no la alarga.
  * Devuelve null si no cabe en el mismo día (llegaría a las 24:00 o después) o si la entrada no es válida.
  */
-export function salidaPlaneada(horaEntrada: string, jornadaHoras: number, almuerzoMin: number): string | null {
+export function salidaPlaneada(horaEntrada: string, jornadaHoras: number): string | null {
   const partes = /^([0-2][0-9]):([0-5][0-9])$/.exec(horaEntrada)
-  if (!partes || !Number.isFinite(jornadaHoras) || !Number.isFinite(almuerzoMin)) return null
-  const total = Number(partes[1]) * 60 + Number(partes[2]) + Math.round(jornadaHoras * 60) + Math.round(almuerzoMin)
+  if (!partes || !Number.isFinite(jornadaHoras)) return null
+  const total = Number(partes[1]) * 60 + Number(partes[2]) + Math.round(jornadaHoras * 60)
   if (total >= 24 * 60) return null
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
 }
 
 export interface HorarioSemanal {
+  /** Horas de la jornada completa, con el almuerzo dentro. */
   jornadaObjetivoHoras: number
   recorteLunesHoras: number
+  duracionAlmuerzoMin: number
 }
 
 /** Horas que se recortan a la jornada de ese día: `recorteLunesHoras` los lunes y nada el resto de la semana. */
@@ -177,7 +196,8 @@ export function recorteDelDia(fecha: Date, recorteLunesHoras: number): number {
   return fecha.getDay() === 1 ? recorteLunesHoras : 0
 }
 
-/** Horas netas (sin almuerzo) que hay que trabajar ese día; nunca menos de 0. */
+/** Horas netas (sin almuerzo) que hay que trabajar ese día: la jornada menos el recorte y menos el almuerzo; nunca menos de 0. */
 export function jornadaObjetivoDelDia(horario: HorarioSemanal, fecha: Date): number {
-  return Math.max(0, horario.jornadaObjetivoHoras - recorteDelDia(fecha, horario.recorteLunesHoras))
+  const horas = horario.jornadaObjetivoHoras - recorteDelDia(fecha, horario.recorteLunesHoras) - horario.duracionAlmuerzoMin / 60
+  return Math.max(0, horas)
 }

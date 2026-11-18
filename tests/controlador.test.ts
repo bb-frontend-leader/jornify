@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Controlador } from '../src/main/controlador'
-import { configPorDefecto } from '../src/main/configEsquema'
+import { configPorDefecto } from './configDiezNetas'
 import { TransicionInvalidaError } from '../src/main/estado'
 import { Historial } from '../src/main/historial'
 import type { ContextoPublicacion, Publicador } from '../src/main/publicadores/base'
@@ -252,7 +252,7 @@ describe('Controlador', () => {
   it('refleja "siempre visible" y la jornada objetivo de la configuración', () => {
     const config = configPorDefecto()
     config.app.siempreVisible = true
-    config.horario.jornadaObjetivoHoras = 6
+    config.horario.jornadaObjetivoHoras = 7 // 6 h netas más 1 h de almuerzo
     const conConfig = new Controlador({ historial, publicador, obtenerConfig: () => config, ahora: () => reloj })
     const foto = conConfig.instantanea()
     expect(foto.siempreVisible).toBe(true)

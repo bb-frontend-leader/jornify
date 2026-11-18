@@ -16,7 +16,7 @@ import { Cola } from './cola'
 import { construirMensaje, formatearMensaje } from './plantillas'
 import type { Publicador } from './publicadores/base'
 import type { NombreSonido } from './sonidos'
-import { horaDelDia } from './fechas'
+import { horaDelDia, milisegundosDe } from './fechas'
 import { temaVigente } from './temas'
 import { calcularTiempo, calcularTramos, jornadaObjetivoDelDia, recorteDelDia } from './tiempo'
 
@@ -78,9 +78,15 @@ export class Controlador {
     const jornadaObjetivoHoras = jornadaObjetivoDelDia(config.horario, ahora)
     const recorteMs = recorteDelDia(ahora, config.horario.recorteLunesHoras) * 3_600_000
     const tiempo = calcularTiempo(eventos, ahora, { ...config.horario, jornadaObjetivoHoras })
+    const almuerzoMs = config.horario.duracionAlmuerzoMin * 60_000
+    const salidaAAlmorzar = [...eventos].reverse().find((evento) => evento.tipo === 'almuerzo')
+    const enAlmuerzo = tiempo.estado === 'en_almuerzo' && salidaAAlmorzar !== undefined
     return {
       estado: tiempo.estado,
       etiquetaEstado: ETIQUETAS_ESTADO[tiempo.estado],
+      // El almuerzo está dentro de la jornada: la salida estimada lo cuenta aunque aún no se tome.
+      almuerzoPorTomarMs: tiempo.estado === 'fuera_de_jornada' || enAlmuerzo || almuerzoCompletado(eventos) ? 0 : almuerzoMs,
+      almuerzoTerminaEnMs: enAlmuerzo ? milisegundosDe(salidaAAlmorzar.ocurridoEn) + almuerzoMs : null,
       acciones: accionesValidas(tiempo.estado, { almuerzoTomado: almuerzoCompletado(eventos) }).map((tipo) => ({ tipo, etiqueta: etiquetaDeAccion(tipo) })),
       trabajadoMs: tiempo.trabajadoMs,
       objetivoMs: tiempo.objetivoMs,

@@ -14,18 +14,18 @@ import { salidaPlaneada } from '../src/main/tiempo'
 const base = ajustesDeConfig(configPorDefecto())
 
 describe('salidaPlaneada', () => {
-  it('suma entrada, jornada neta y almuerzo', () => {
-    expect(salidaPlaneada('08:00', 10, 60)).toBe('19:00')
-    expect(salidaPlaneada('08:00', 9, 60)).toBe('18:00')
-    expect(salidaPlaneada('07:30', 9.5, 45)).toBe('17:45')
-    expect(salidaPlaneada('08:00', 8, 30)).toBe('16:30')
+  it('suma entrada y jornada: el almuerzo va dentro', () => {
+    expect(salidaPlaneada('08:00', 10)).toBe('18:00')
+    expect(salidaPlaneada('06:39', 10)).toBe('16:39')
+    expect(salidaPlaneada('07:30', 9.5)).toBe('17:00')
+    expect(salidaPlaneada('08:00', 8)).toBe('16:00')
   })
 
   it('devuelve null si no cabe en el día o los datos no sirven', () => {
-    expect(salidaPlaneada('08:00', 15, 60)).toBeNull()
-    expect(salidaPlaneada('23:00', 1, 0)).toBeNull()
-    expect(salidaPlaneada('8:00', 8, 60)).toBeNull()
-    expect(salidaPlaneada('08:00', Number.NaN, 60)).toBeNull()
+    expect(salidaPlaneada('08:00', 16)).toBeNull()
+    expect(salidaPlaneada('23:00', 1)).toBeNull()
+    expect(salidaPlaneada('8:00', 8)).toBeNull()
+    expect(salidaPlaneada('08:00', Number.NaN)).toBeNull()
   })
 })
 
@@ -78,7 +78,7 @@ describe('aplicarAjustes', () => {
     })
     expect(config.horario).toMatchObject({
       horaEntrada: '07:30',
-      horaSalida: '17:15',
+      horaSalida: '16:30',
       jornadaObjetivoHoras: 9,
       recorteLunesHoras: 0.5,
       duracionAlmuerzoMin: 45,

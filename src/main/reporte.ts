@@ -100,6 +100,7 @@ export interface Reporte {
   /** Jornada y recorte con que se calculó la meta de cada día (se anotan en el archivo). */
   jornadaObjetivoHoras: number
   recorteLunesHoras: number
+  duracionAlmuerzoMin: number
 }
 
 const claveDelDia = (fecha: Date): string => `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`
@@ -175,7 +176,8 @@ export function construirReporte(eventos: readonly Evento[], rango: Rango, ahora
     eventos: ordenados,
     totales,
     jornadaObjetivoHoras: config.horario.jornadaObjetivoHoras,
-    recorteLunesHoras: config.horario.recorteLunesHoras
+    recorteLunesHoras: config.horario.recorteLunesHoras,
+    duracionAlmuerzoMin: config.horario.duracionAlmuerzoMin
   }
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { configPorDefecto } from '../src/main/configEsquema'
+import { configPorDefecto } from './configDiezNetas'
 import type { TipoEvento } from '../src/main/estado'
 import { aIsoConZona } from '../src/main/fechas'
 import type { Evento } from '../src/main/historial'

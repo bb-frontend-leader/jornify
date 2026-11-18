@@ -22,11 +22,14 @@ function textoDesde(instantanea: Instantanea): string {
  * lo que falta (u horas extra), la salida estimada y el avance.
  */
 export default function Reloj({ instantanea, ahora }: Props): React.JSX.Element {
-  const { estado, etiquetaEstado, trabajadoMs, calculadoEn, corriendo, objetivoMs, tramos } = instantanea
+  const { estado, etiquetaEstado, trabajadoMs, calculadoEn, corriendo, objetivoMs, tramos, almuerzoPorTomarMs, almuerzoTerminaEnMs } = instantanea
 
   // El reloj avanza aquí mismo a partir de la foto del proceso principal; no se le pide nada cada segundo.
   const trabajado = trabajadoMs + (corriendo ? Math.max(0, ahora - calculadoEn) : 0)
-  const progreso = derivarProgreso(trabajado, objetivoMs / 3_600_000, estado, ahora)
+  const progreso = derivarProgreso(trabajado, objetivoMs / 3_600_000, estado, ahora, {
+    porTomarMs: almuerzoPorTomarMs,
+    terminaEnMs: almuerzoTerminaEnMs
+  })
   const enHorasExtra = progreso.extraMs > 0
   const terminada = estado === 'fuera_de_jornada' && tramos.length > 0
   const porcentaje = Math.round(progreso.progreso * 100)

@@ -21,11 +21,14 @@ const hora = (ms: number): string => formatearHora(new Date(ms))
  * con la marca de "ahora" y la de la salida estimada.
  */
 export default function LineaDelDia({ instantanea, ahora }: Props): React.JSX.Element {
-  const { estado, tramos, horario, trabajadoMs, calculadoEn, corriendo, objetivoMs } = instantanea
+  const { estado, tramos, horario, trabajadoMs, calculadoEn, corriendo, objetivoMs, almuerzoPorTomarMs, almuerzoTerminaEnMs } = instantanea
   const enCurso = estado !== 'fuera_de_jornada'
 
   const trabajado = trabajadoMs + (corriendo ? Math.max(0, ahora - calculadoEn) : 0)
-  const progreso = derivarProgreso(trabajado, objetivoMs / 3_600_000, estado, ahora)
+  const progreso = derivarProgreso(trabajado, objetivoMs / 3_600_000, estado, ahora, {
+    porTomarMs: almuerzoPorTomarMs,
+    terminaEnMs: almuerzoTerminaEnMs
+  })
   // Con la meta cumplida ya no hay salida que estimar (coincidiría con "ahora").
   const salidaEstimada = progreso.restanteMs > 0 ? (progreso.salidaEstimada?.getTime() ?? null) : null
 

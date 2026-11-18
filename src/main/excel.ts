@@ -105,9 +105,13 @@ export async function construirLibro(reporte: Reporte): Promise<ExcelJS.Workbook
   })
 
   const nota = resumen.addRow([])
+  // La jornada incluye el almuerzo: la meta neta es lo que queda al restarlo.
+  const horasDeAlmuerzo = reporte.duracionAlmuerzoMin / 60
+  const netas = reporte.jornadaObjetivoHoras - horasDeAlmuerzo
   nota.getCell(1).value =
-    `La meta de cada día usa los ajustes actuales: ${reporte.jornadaObjetivoHoras} h netas` +
-    (reporte.recorteLunesHoras > 0 ? `, los lunes ${reporte.jornadaObjetivoHoras - reporte.recorteLunesHoras} h.` : '.') +
+    `La meta de cada día usa los ajustes actuales: ${netas} h netas` +
+    (reporte.recorteLunesHoras > 0 ? `, los lunes ${netas - reporte.recorteLunesHoras} h` : '') +
+    ` (el almuerzo de ${reporte.duracionAlmuerzoMin} min va dentro de la jornada de ${reporte.jornadaObjetivoHoras} h).` +
     ' Solo aparecen los días con registros. Los días sin cerrar cuentan hasta su último evento.'
   nota.getCell(1).font = { italic: true, color: { argb: 'FF4F5D58' } }
   resumen.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1 + reporte.dias.length, column: 10 } }
