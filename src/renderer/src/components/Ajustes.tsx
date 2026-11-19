@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Ajustes as DatosAjustes, AjustesVista } from '../../../preload/tipos'
 import { opcionesDePreferencia, temaPorId, temaVigente } from '../../../main/temas'
-import { salidaPlaneada } from '../../../main/tiempo'
 import estilos from './Ajustes.module.css'
 import Plantillas from './Plantillas'
 
@@ -13,7 +12,6 @@ interface Props {
 
 /** Los campos se editan como texto para que escribir "9," o borrar el número no rompa el formulario. */
 interface Formulario {
-  horaEntrada: string
   jornada: string
   recorte: string
   almuerzo: string
@@ -30,7 +28,6 @@ interface Formulario {
 
 function aFormulario(a: DatosAjustes): Formulario {
   return {
-    horaEntrada: a.horaEntrada,
     jornada: String(a.jornadaObjetivoHoras),
     recorte: String(a.recorteLunesHoras),
     almuerzo: String(a.duracionAlmuerzoMin),
@@ -48,7 +45,6 @@ function aFormulario(a: DatosAjustes): Formulario {
 
 function aAjustes(f: Formulario): DatosAjustes {
   return {
-    horaEntrada: f.horaEntrada,
     jornadaObjetivoHoras: Number(f.jornada.replace(',', '.')),
     recorteLunesHoras: Number(f.recorte.replace(',', '.')),
     duracionAlmuerzoMin: Number(f.almuerzo.replace(',', '.')),
@@ -116,11 +112,8 @@ export default function Ajustes({ onVolver, onTemaDePrueba }: Props): React.JSX.
   const ajustes = aAjustes(formulario)
   const original = aFormulario(vista.actuales)
   const hayCambios = (Object.keys(original) as (keyof Formulario)[]).some((clave) => original[clave] !== formulario[clave])
-  const salida = salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras)
-  const salidaLunes =
-    salida !== null && ajustes.recorteLunesHoras > 0
-      ? salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras - ajustes.recorteLunesHoras)
-      : null
+  const netas = ajustes.jornadaObjetivoHoras - ajustes.duracionAlmuerzoMin / 60
+  const hayRecorte = ajustes.recorteLunesHoras > 0
 
   async function guardar(evento: React.FormEvent): Promise<void> {
     evento.preventDefault()
@@ -168,22 +161,18 @@ export default function Ajustes({ onVolver, onTemaDePrueba }: Props): React.JSX.
           <>
         <div className={estilos.fila}>
           <label>
-            Hora de entrada
-            <input type="time" required value={formulario.horaEntrada} onChange={(e) => cambiar({ horaEntrada: e.target.value })} />
-          </label>
-          <label>
             Jornada (horas con almuerzo)
             <input inputMode="decimal" required value={formulario.jornada} onChange={(e) => cambiar({ jornada: e.target.value })} />
+          </label>
+          <label>
+            Almuerzo (minutos)
+            <input inputMode="numeric" required value={formulario.almuerzo} onChange={(e) => cambiar({ almuerzo: e.target.value })} />
           </label>
         </div>
         <div className={estilos.fila}>
           <label>
             Recorte de los lunes (h)
             <input inputMode="decimal" required value={formulario.recorte} onChange={(e) => cambiar({ recorte: e.target.value })} />
-          </label>
-          <label>
-            Almuerzo (minutos)
-            <input inputMode="numeric" required value={formulario.almuerzo} onChange={(e) => cambiar({ almuerzo: e.target.value })} />
           </label>
         </div>
         <label className={estilos.casilla}>
@@ -196,14 +185,16 @@ export default function Ajustes({ onVolver, onTemaDePrueba }: Props): React.JSX.
         </label>
 
         <p className={estilos.resumen}>
-          {salida === null ? (
-            'Entrada y jornada no caben en el mismo día.'
+          {!Number.isFinite(netas) || netas <= 0 ? (
+            'El almuerzo no cabe en la jornada.'
           ) : (
             <>
-              Salida planeada <strong>{salida}</strong>
-              {salidaLunes !== null && (
+              Sales <strong>{horasEnTexto(ajustes.jornadaObjetivoHoras)}</strong> después de iniciar ({horasEnTexto(netas)} de trabajo).
+              {hayRecorte && ajustes.recorteLunesHoras < ajustes.jornadaObjetivoHoras && (
                 <>
-                  , los lunes <strong>{salidaLunes}</strong> ({horasEnTexto(ajustes.jornadaObjetivoHoras - ajustes.recorteLunesHoras)} con almuerzo)
+                  {' '}
+                  Los lunes <strong>{horasEnTexto(ajustes.jornadaObjetivoHoras - ajustes.recorteLunesHoras)}</strong> (
+                  {horasEnTexto(netas - ajustes.recorteLunesHoras)} de trabajo).
                 </>
               )}
             </>

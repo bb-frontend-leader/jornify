@@ -9,25 +9,8 @@ import {
   vistaDePlantillas
 } from '../src/main/ajustes'
 import { configPorDefecto } from '../src/main/configEsquema'
-import { salidaPlaneada } from '../src/main/tiempo'
 
 const base = ajustesDeConfig(configPorDefecto())
-
-describe('salidaPlaneada', () => {
-  it('suma entrada y jornada: el almuerzo va dentro', () => {
-    expect(salidaPlaneada('08:00', 10)).toBe('18:00')
-    expect(salidaPlaneada('06:39', 10)).toBe('16:39')
-    expect(salidaPlaneada('07:30', 9.5)).toBe('17:00')
-    expect(salidaPlaneada('08:00', 8)).toBe('16:00')
-  })
-
-  it('devuelve null si no cabe en el día o los datos no sirven', () => {
-    expect(salidaPlaneada('08:00', 16)).toBeNull()
-    expect(salidaPlaneada('23:00', 1)).toBeNull()
-    expect(salidaPlaneada('8:00', 8)).toBeNull()
-    expect(salidaPlaneada('08:00', Number.NaN)).toBeNull()
-  })
-})
 
 describe('validarAjustes', () => {
   it('acepta los valores por defecto', () => {
@@ -49,9 +32,7 @@ describe('validarAjustes', () => {
     [{ recorteLunesHoras: 3, jornadaObjetivoHoras: 3 }, 'menor que la jornada'],
     [{ duracionAlmuerzoMin: 0 }, 'al menos 5'],
     [{ duracionAlmuerzoMin: 300 }, 'no puede pasar de 240'],
-    [{ duracionAlmuerzoMin: 30.5 }, 'minutos enteros'],
-    [{ horaEntrada: '8am' }, 'hora de entrada'],
-    [{ horaEntrada: '14:00', jornadaObjetivoHoras: 10 }, 'no caben en el mismo día']
+    [{ duracionAlmuerzoMin: 30.5 }, 'minutos enteros']
   ])('rechaza %j', (cambio, mensaje) => {
     const resultado = validarAjustes({ ...base, ...cambio })
     expect(resultado.ok).toBe(false)
@@ -66,19 +47,16 @@ describe('validarAjustes', () => {
 })
 
 describe('aplicarAjustes', () => {
-  it('cambia el horario y recalcula la hora de salida', () => {
+  it('cambia el horario', () => {
     const config = aplicarAjustes(configPorDefecto(), {
       ...base,
       jornadaObjetivoHoras: 9,
       duracionAlmuerzoMin: 45,
       recorteLunesHoras: 0.5,
-      horaEntrada: '07:30',
       regresoAlmuerzoAutomatico: false,
       mencionar: 'Ana Pérez'
     })
     expect(config.horario).toMatchObject({
-      horaEntrada: '07:30',
-      horaSalida: '16:30',
       jornadaObjetivoHoras: 9,
       recorteLunesHoras: 0.5,
       duracionAlmuerzoMin: 45,
@@ -95,10 +73,6 @@ describe('aplicarAjustes', () => {
     expect(config.app).toEqual(original.app)
     expect(config.version).toBe(original.version)
     expect(config.horario.descontarAusencias).toBe(original.horario.descontarAusencias)
-  })
-
-  it('lanza si el horario no cabe en el día (la validación debe ocurrir antes)', () => {
-    expect(() => aplicarAjustes(configPorDefecto(), { ...base, horaEntrada: '14:00' })).toThrow(RangeError)
   })
 })
 

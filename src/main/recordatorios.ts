@@ -50,9 +50,9 @@ export function calcularRecordatorios(eventos: readonly Evento[], ahora: Date, c
 
   const inicio = [...eventos].reverse().find((evento) => evento.tipo === 'inicio')
   if (config.app.recordarSalida && inicio) {
-    const salida = salidaPlaneadaDelDia(eventos, ahora, config.horario).getTime()
-    if (claveDeFecha(new Date(salida)) === claveDeFecha(ahora)) {
-      pendientes.push({ clave: `salida-${claveDeFecha(ahora)}`, tipo: 'salida', cuandoMs: salida, referenciaMs: salida })
+    const salida = salidaPlaneadaDelDia(eventos, ahora, config.horario)
+    if (salida && claveDeFecha(salida) === claveDeFecha(ahora)) {
+      pendientes.push({ clave: `salida-${claveDeFecha(ahora)}`, tipo: 'salida', cuandoMs: salida.getTime(), referenciaMs: salida.getTime() })
     }
   }
 

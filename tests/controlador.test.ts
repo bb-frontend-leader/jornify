@@ -396,16 +396,13 @@ describe('Controlador: datos para la línea del día', () => {
     historial.cerrar()
   })
 
-  it('con la jornada en marcha, entrada y salida salen de la hora real de inicio y no de Ajustes', async () => {
+  it('entrada y salida salen de la hora real de inicio', async () => {
     const historial = Historial.abrir(':memory:')
     const publicador = new PublicadorFalso()
     let reloj = new Date(2026, 10, 6, 6, 0)
     const controlador = new Controlador({ historial, publicador, obtenerConfig: configPorDefecto, ahora: () => reloj })
-    // Antes de empezar: el horario de Ajustes (8:00 a 19:00).
-    expect(controlador.instantanea().horario).toEqual({
-      entradaMs: new Date(2026, 10, 6, 8, 0).getTime(),
-      salidaMs: new Date(2026, 10, 6, 19, 0).getTime()
-    })
+    // Antes de empezar no hay horario: la salida depende de cuándo se inicie.
+    expect(controlador.instantanea().horario).toBeNull()
     await controlador.ejecutar('inicio')
     reloj = new Date(2026, 10, 6, 7, 0)
     expect(controlador.instantanea().horario).toEqual({
@@ -489,19 +486,25 @@ describe('Controlador: jornada de 10 h y recorte de los lunes', () => {
   const LUNES = new Date(2026, 10, 9, 8, 0)
   const MARTES = new Date(2026, 10, 10, 8, 0)
 
-  it('de martes a domingo la meta es de 10 h netas y la salida planeada las 19:00', () => {
+  it('de martes a domingo la meta es de 10 h netas y la salida planeada es 11 h después de iniciar', async () => {
     for (let dia = 10; dia <= 15; dia++) {
-      const foto = controladorEn(new Date(2026, 10, dia, 8, 0)).instantanea()
+      const controlador = controladorEn(new Date(2026, 10, dia, 8, 0))
+      await controlador.ejecutar('inicio')
+      const foto = controlador.instantanea()
       expect(foto.objetivoMs).toBe(10 * HORA)
-      expect(foto.horario.salidaMs).toBe(new Date(2026, 10, dia, 19, 0).getTime())
+      expect(foto.horario?.salidaMs).toBe(new Date(2026, 10, dia, 19, 0).getTime())
     }
   })
 
-  it('los lunes la meta baja a 9 h y la salida planeada a las 18:00', () => {
-    const foto = controladorEn(LUNES).instantanea()
+  it('los lunes la meta baja a 9 h y la salida planeada a una hora menos', async () => {
+    const controlador = controladorEn(LUNES)
+    await controlador.ejecutar('inicio')
+    const foto = controlador.instantanea()
     expect(foto.objetivoMs).toBe(9 * HORA)
-    expect(foto.horario.salidaMs).toBe(new Date(2026, 10, 9, 18, 0).getTime())
-    expect(foto.horario.entradaMs).toBe(new Date(2026, 10, 9, 8, 0).getTime())
+    expect(foto.horario).toEqual({
+      entradaMs: new Date(2026, 10, 9, 8, 0).getTime(),
+      salidaMs: new Date(2026, 10, 9, 18, 0).getTime()
+    })
   })
 
   it('el lunes se pasa a horas extra una hora antes que el resto de la semana', async () => {

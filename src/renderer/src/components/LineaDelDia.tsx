@@ -39,7 +39,7 @@ export default function LineaDelDia({ instantanea, ahora }: Props): React.JSX.El
 
   const resumen =
     tramos.length === 0
-      ? `Sin actividad hoy. Horario de ${hora(horario.entradaMs)} a ${hora(horario.salidaMs)}.`
+      ? 'Sin actividad hoy.'
       : tramos
           .map((t) => `${NOMBRE_TRAMO[t.estado]} desde ${hora(t.desdeMs)} ${t.hastaMs === null ? 'hasta ahora' : `hasta ${hora(t.hastaMs)}`}`)
           .join('. ')

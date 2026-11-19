@@ -3,7 +3,7 @@ import { configPorDefecto } from '../src/main/configEsquema'
 import { Controlador } from '../src/main/controlador'
 import { Historial } from '../src/main/historial'
 import type { Publicador } from '../src/main/publicadores/base'
-import { derivarProgreso, jornadaObjetivoDelDia, salidaPlaneada } from '../src/main/tiempo'
+import { derivarProgreso, jornadaObjetivoDelDia } from '../src/main/tiempo'
 import { validarAjustes, ajustesDeConfig } from '../src/main/ajustes'
 
 const MIN = 60_000
@@ -11,13 +11,11 @@ const HORA = 60 * MIN
 
 // El almuerzo está dentro de la jornada: tomarlo no corre la hora de salida.
 describe('el almuerzo no alarga la jornada', () => {
-  it('por defecto: 10 h con el almuerzo dentro son 9 h netas y la salida es entrada + 10 h', () => {
+  it('por defecto: 10 h con el almuerzo dentro son 9 h netas y la salida es el inicio + 10 h', () => {
     const config = configPorDefecto()
     expect(config.horario.jornadaObjetivoHoras).toBe(10)
-    expect(config.horario.horaSalida).toBe('18:00')
     expect(jornadaObjetivoDelDia(config.horario, new Date(2026, 10, 10))).toBe(9)
     expect(jornadaObjetivoDelDia(config.horario, new Date(2026, 10, 9))).toBe(8) // lunes: 1 h menos
-    expect(salidaPlaneada('06:39', 10)).toBe('16:39')
   })
 
   describe('salida estimada', () => {
@@ -127,7 +125,7 @@ describe('mensaje de fin al recuperar una ausencia entrando a otra hora', () => 
         return Promise.resolve()
       }
     }
-    // Config por defecto: entrada de Ajustes a las 8:00 y jornada de 10 h (salida 18:00), pero se entra a las 6:00.
+    // Config por defecto: jornada de 10 h; se entra a las 6:00, así que la salida planeada es a las 16:00.
     const controlador = new Controlador({
       historial: Historial.abrir(':memory:'),
       publicador,

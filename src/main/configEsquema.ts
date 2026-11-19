@@ -1,11 +1,10 @@
 // Esquema y valores por defecto de config.json. No importa nada de Electron para poder probarlo con Vitest.
 import { z } from 'zod'
-import { salidaPlaneada } from './tiempo'
 
 const horaHHMM = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Se espera el formato HH:MM')
 
 /** Versión actual del formato de config.json (ver migrarConfig). */
-export const VERSION_CONFIG = 6
+export const VERSION_CONFIG = 7
 
 /**
  * Variables: {saludo} es "Buenos días" o "Buenas tardes" según la hora; {sol} es 🌅 por la mañana y 🌇 por la tarde;
@@ -76,12 +75,9 @@ export const esquemaConfig = z.object({
     .prefault({}),
   horario: z
     .object({
-      horaEntrada: horaHHMM.default('08:00'),
-      // 8:00 + 10 h de jornada (el almuerzo va dentro) = 18:00; los lunes se recorta, ver recorteLunesHoras.
-      horaSalida: horaHHMM.default('18:00'),
-      /** Horas netas por jornada, sin contar el almuerzo. */
+      /** Horas de la jornada completa, con el almuerzo dentro: la salida es la hora de inicio más estas horas. */
       jornadaObjetivoHoras: z.number().positive().max(24).default(10),
-      /** Horas que se restan a la jornada (y a la hora de salida) los lunes. */
+      /** Horas que se restan a la jornada los lunes. */
       recorteLunesHoras: z.number().min(0).max(24).default(1),
       duracionAlmuerzoMin: z.number().int().positive().default(60),
       /** Al salir a almorzar se programa solo el regreso para dentro de `duracionAlmuerzoMin` (se puede marcar antes a mano). */
@@ -139,19 +135,14 @@ function deV1aV2(config: Record<string, unknown>): Record<string, unknown> {
 }
 
 /**
- * v5 → v6: el almuerzo pasó a estar dentro de la jornada (antes la jornada eran horas netas y el almuerzo se sumaba).
- * La jornada guardada se conserva, pero ahora cuenta el almuerzo, así que la hora de salida pasa a ser entrada + jornada.
+ * v6 → v7: se quitó la hora de entrada de Ajustes (la jornada cuenta desde el inicio que se marca); desaparecen
+ * `horaEntrada` y `horaSalida`, que ya nada usa.
  */
-function deV5aV6(config: Record<string, unknown>): Record<string, unknown> {
-  const horario = esObjeto(config['horario']) ? config['horario'] : {}
-  const entrada = typeof horario['horaEntrada'] === 'string' ? horario['horaEntrada'] : '08:00'
-  const jornada = typeof horario['jornadaObjetivoHoras'] === 'number' ? horario['jornadaObjetivoHoras'] : 10
-  const horaSalida = salidaPlaneada(entrada, jornada)
-  return {
-    ...config,
-    horario: horaSalida === null ? horario : { ...horario, horaSalida },
-    version: 6
-  }
+function deV6aV7(config: Record<string, unknown>): Record<string, unknown> {
+  const horario = config['horario']
+  if (!esObjeto(horario)) return { ...config, version: 7 }
+  const { horaEntrada: _entrada, horaSalida: _salida, ...resto } = horario
+  return { ...config, horario: resto, version: 7 }
 }
 
 /** Quita las plantillas que siguen idénticas a las `antiguas` (nadie las editó); las editadas a mano se respetan. */
@@ -179,7 +170,8 @@ function quitarPlantillasSinEditar(
  *   las de la v2 se quitan para que rijan las nuevas.
  * - v3 → v4: los mensajes ganaron un emoji. Lo mismo con las plantillas iguales a las de la v3.
  * - v4 → v5: los mensajes ganaron la hora del evento. Lo mismo con las plantillas iguales a las de la v4.
- * - v5 → v6: el almuerzo quedó dentro de la jornada; se recalcula la hora de salida (entrada + jornada).
+ * - v5 → v6: el almuerzo quedó dentro de la jornada (la jornada guardada se conserva, ahora cuenta el almuerzo).
+ * - v6 → v7: se quitaron la hora de entrada y la de salida del horario; la salida es el inicio real más la jornada.
  * En los pasos anteriores nadie pudo haber elegido esos valores (aún no hay pantalla de configuración); cualquier
  * otro valor se respeta, y al quedar en la versión actual no se toca más.
  */
@@ -203,6 +195,6 @@ export function migrarConfig(crudo: unknown): unknown {
     config = quitarPlantillasSinEditar(config, PLANTILLAS_V4, 5)
     version = 5
   }
-  if (version < 6) config = deV5aV6(config)
+  if (version < 7) config = deV6aV7(config)
   return config
 }

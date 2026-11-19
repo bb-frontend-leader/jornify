@@ -206,6 +206,10 @@ describe('escalaDelDia y marcasDeHora', () => {
     const temprano = calcularTramos([ev('inicio', 7, 20)])
     expect(escalaDelDia(temprano, horario, en(9).getTime(), null).inicioMs).toBe(en(7).getTime())
     expect(escalaDelDia([], horario, en(18, 10).getTime(), null).finMs).toBe(en(19).getTime())
+    // Sin jornada iniciada la cinta arranca en la hora actual.
+    const sinHorario = escalaDelDia([], null, en(7, 30).getTime(), null)
+    expect(sinHorario.inicioMs).toBe(en(7).getTime())
+    expect(sinHorario.finMs).toBe(en(11).getTime())
     expect(escalaDelDia([], horario, en(10).getTime(), en(17, 40).getTime()).finMs).toBe(en(18).getTime())
   })
 

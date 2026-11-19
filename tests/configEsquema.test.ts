@@ -7,8 +7,9 @@ describe('esquemaConfig', () => {
     expect(config.teams.metodo).toBe('graph')
     expect(config.horario.jornadaObjetivoHoras).toBe(10)
     expect(config.horario.recorteLunesHoras).toBe(1)
-    expect(config.horario.horaSalida).toBe('18:00')
-    expect(config.version).toBe(6)
+    expect(config.horario).not.toHaveProperty('horaEntrada')
+    expect(config.horario).not.toHaveProperty('horaSalida')
+    expect(config.version).toBe(7)
     expect(config.teams.mencionar).toBe('Angela Ortiz Peña')
     expect(config.plantillas.inicio).toBe('{sol} {saludo}, inicio mi jornada ({hora}) {mencion}')
     expect(config.plantillas.finConRecuperacion).toBe('⏱️ {saludo}, termino mi jornada ({hora}) y recupero {tiempo} de hoy {mencion}')
@@ -19,14 +20,12 @@ describe('esquemaConfig', () => {
   it('conserva los valores válidos y completa los que faltan', () => {
     const config = esquemaConfig.parse({ horario: { jornadaObjetivoHoras: 6 }, app: { siempreVisible: true } })
     expect(config.horario.jornadaObjetivoHoras).toBe(6)
-    expect(config.horario.horaEntrada).toBe('08:00')
     expect(config.app.siempreVisible).toBe(true)
     expect(config.app.confirmarInicioAlArrancar).toBe(true)
   })
 
   it('rechaza valores inválidos', () => {
     expect(esquemaConfig.safeParse({ teams: { metodo: 'correo' } }).success).toBe(false)
-    expect(esquemaConfig.safeParse({ horario: { horaEntrada: '8am' } }).success).toBe(false)
     expect(esquemaConfig.safeParse({ horario: { jornadaObjetivoHoras: -1 } }).success).toBe(false)
   })
 })
@@ -51,7 +50,7 @@ describe('migrarConfig: plantillas de la v2 a la v4', () => {
 
   it('las plantillas sin editar pasan a los mensajes nuevos', () => {
     const config = esquemaConfig.parse(migrarConfig({ version: 2, plantillas: plantillasV2 }))
-    expect(config.version).toBe(6)
+    expect(config.version).toBe(7)
     expect(config.plantillas.inicio).toBe('{sol} {saludo}, inicio mi jornada ({hora}) {mencion}')
     expect(config.plantillas.ausencia).toBe('⏸️ {saludo}, me ausento un momento ({hora}) {mencion}')
     expect(config.plantillas.fin).toBe('{sol} {saludo}, termino mi jornada ({hora}) {mencion}')
@@ -72,7 +71,7 @@ describe('migrarConfig: plantillas de la v2 a la v4', () => {
     )
     expect(config.horario.jornadaObjetivoHoras).toBe(10)
     expect(config.plantillas.fin).toBe('{sol} {saludo}, termino mi jornada ({hora}) {mencion}')
-    expect(config.version).toBe(6)
+    expect(config.version).toBe(7)
   })
 })
 
@@ -85,32 +84,29 @@ describe('migrarConfig', () => {
   it('un config v1 con los valores antiguos (8 h, salida 17:00) pasa a los nuevos y conserva lo demás', () => {
     const config = esquemaConfig.parse(migrarConfig(v1Antiguo))
     expect(config.horario.jornadaObjetivoHoras).toBe(10)
-    expect(config.horario.horaSalida).toBe('18:00')
     expect(config.horario.recorteLunesHoras).toBe(1)
     expect(config.teams.teamId).toBe('T')
-    expect(config.version).toBe(6)
+    expect(config.version).toBe(7)
   })
 
-  it('respeta la jornada que el usuario eligió y deriva la salida de ella', () => {
+  it('respeta la jornada que el usuario eligió', () => {
     const personalizado = { horario: { horaSalida: '16:00', jornadaObjetivoHoras: 7 } }
     const config = esquemaConfig.parse(migrarConfig(personalizado))
     expect(config.horario.jornadaObjetivoHoras).toBe(7)
-    expect(config.horario.horaSalida).toBe('15:00')
   })
 
-  it('solo migra una vez: en v6 un valor de 8 h se respeta y el objeto no se toca', () => {
-    const v6 = { version: 6, horario: { horaSalida: '17:00', jornadaObjetivoHoras: 8 } }
-    expect(migrarConfig(v6)).toBe(v6)
-    expect(esquemaConfig.parse(migrarConfig(v6)).horario.jornadaObjetivoHoras).toBe(8)
+  it('solo migra una vez: en v7 un valor de 8 h se respeta y el objeto no se toca', () => {
+    const v7 = { version: 7, horario: { jornadaObjetivoHoras: 8 } }
+    expect(migrarConfig(v7)).toBe(v7)
+    expect(esquemaConfig.parse(migrarConfig(v7)).horario.jornadaObjetivoHoras).toBe(8)
   })
 
-  it('v5 → v6: el almuerzo queda dentro de la jornada y la salida pasa a ser entrada + jornada', () => {
-    const v5 = { version: 5, horario: { horaEntrada: '08:00', horaSalida: '19:00', jornadaObjetivoHoras: 10, duracionAlmuerzoMin: 60 } }
-    const config = esquemaConfig.parse(migrarConfig(v5))
-    expect(config.version).toBe(6)
-    expect(config.horario.jornadaObjetivoHoras).toBe(10)
-    expect(config.horario.horaSalida).toBe('18:00')
-    expect(esquemaConfig.parse(migrarConfig({ version: 5, horario: { horaEntrada: '06:30' } })).horario.horaSalida).toBe('16:30')
+  it('v6 → v7: se quitan la hora de entrada y la de salida y se conserva el resto del horario', () => {
+    const v6 = { version: 6, horario: { horaEntrada: '08:00', horaSalida: '18:00', jornadaObjetivoHoras: 10, duracionAlmuerzoMin: 60 } }
+    const migrado = migrarConfig(v6) as { version: number; horario: Record<string, unknown> }
+    expect(migrado.version).toBe(7)
+    expect(migrado.horario).toEqual({ jornadaObjetivoHoras: 10, duracionAlmuerzoMin: 60 })
+    expect(esquemaConfig.parse(migrarConfig({ version: 5, horario: { horaEntrada: '06:30' } })).horario).not.toHaveProperty('horaEntrada')
   })
 
   it('en v2 ya no repite la migración de horario (8 h se respeta)', () => {
@@ -119,7 +115,7 @@ describe('migrarConfig', () => {
   })
 
   it('migra aunque el archivo no tenga la sección horario, y tolera basura', () => {
-    expect(esquemaConfig.parse(migrarConfig({})).version).toBe(6)
+    expect(esquemaConfig.parse(migrarConfig({})).version).toBe(7)
     expect(migrarConfig(null)).toBeNull()
     expect(migrarConfig('texto')).toBe('texto')
   })
@@ -138,7 +134,7 @@ describe('migrarConfig: plantillas de la v3 a la v4', () => {
 
   it('las plantillas v3 sin editar pasan a las que llevan emoji', () => {
     const config = esquemaConfig.parse(migrarConfig({ version: 3, plantillas: plantillasV3 }))
-    expect(config.version).toBe(6)
+    expect(config.version).toBe(7)
     expect(config.plantillas.almuerzo).toBe('🍲 {saludo}, inicio mi hora de almuerzo ({hora}) {mencion}')
     expect(config.plantillas.regresoAlmuerzo).toBe('🍽️ {saludo}, termino mi hora de almuerzo ({hora}) {mencion}')
   })
@@ -165,7 +161,7 @@ describe('migrarConfig: plantillas de la v4 a la v5 (con la hora)', () => {
 
   it('las plantillas v4 sin editar pasan a las que llevan la hora', () => {
     const config = esquemaConfig.parse(migrarConfig({ version: 4, plantillas: plantillasV4 }))
-    expect(config.version).toBe(6)
+    expect(config.version).toBe(7)
     expect(config.plantillas.inicio).toBe('{sol} {saludo}, inicio mi jornada ({hora}) {mencion}')
     expect(config.plantillas.regresoAlmuerzo).toBe('🍽️ {saludo}, termino mi hora de almuerzo ({hora}) {mencion}')
     expect(config.plantillas.finConRecuperacion).toBe('⏱️ {saludo}, termino mi jornada ({hora}) y recupero {tiempo} de hoy {mencion}')

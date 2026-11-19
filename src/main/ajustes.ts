@@ -5,11 +5,9 @@ import { type Config, configPorDefecto } from './configEsquema'
 import { LARGO_MAXIMO_MENSAJE } from './controlador'
 import { VARIABLES_PLANTILLA } from './plantillas'
 import { esPreferenciaDeTema } from './temas'
-import { salidaPlaneada } from './tiempo'
 
 const esquemaAjustes = z
   .object({
-    horaEntrada: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'La hora de entrada no es válida'),
     jornadaObjetivoHoras: z
       .number('La jornada debe ser un número de horas')
       .min(1, 'La jornada debe ser de al menos 1 hora')
@@ -40,9 +38,6 @@ const esquemaAjustes = z
     if (ajustes.recorteLunesHoras + ajustes.duracionAlmuerzoMin / 60 >= ajustes.jornadaObjetivoHoras) {
       contexto.addIssue({ code: 'custom', message: 'El almuerzo y el recorte de los lunes deben caber en la jornada' })
     }
-    if (salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras) === null) {
-      contexto.addIssue({ code: 'custom', message: 'Entrada y jornada no caben en el mismo día' })
-    }
   })
 
 export type ResultadoValidacion = { ok: true; ajustes: Ajustes } | { ok: false; error: string }
@@ -56,7 +51,6 @@ export function validarAjustes(crudo: unknown): ResultadoValidacion {
 
 export function ajustesDeConfig(config: Config): Ajustes {
   return {
-    horaEntrada: config.horario.horaEntrada,
     jornadaObjetivoHoras: config.horario.jornadaObjetivoHoras,
     recorteLunesHoras: config.horario.recorteLunesHoras,
     duracionAlmuerzoMin: config.horario.duracionAlmuerzoMin,
@@ -76,13 +70,8 @@ export function vistaDeAjustes(config: Config): AjustesVista {
   return { actuales: ajustesDeConfig(config), porDefecto: ajustesDeConfig(configPorDefecto()) }
 }
 
-/**
- * Config con los ajustes aplicados. La hora de salida se recalcula (entrada + jornada, con el almuerzo dentro)
- * para que la línea del día y la salida planeada sigan al horario nuevo.
- */
+/** Config con los ajustes aplicados. */
 export function aplicarAjustes(config: Config, ajustes: Ajustes): Config {
-  const horaSalida = salidaPlaneada(ajustes.horaEntrada, ajustes.jornadaObjetivoHoras)
-  if (horaSalida === null) throw new RangeError('La jornada no cabe en el día')
   return {
     ...config,
     teams: { ...config.teams, mencionar: ajustes.mencionar, respuestasEnHilo: ajustes.respuestasEnHilo },
@@ -97,8 +86,6 @@ export function aplicarAjustes(config: Config, ajustes: Ajustes): Config {
     },
     horario: {
       ...config.horario,
-      horaEntrada: ajustes.horaEntrada,
-      horaSalida,
       jornadaObjetivoHoras: ajustes.jornadaObjetivoHoras,
       recorteLunesHoras: ajustes.recorteLunesHoras,
       duracionAlmuerzoMin: ajustes.duracionAlmuerzoMin,

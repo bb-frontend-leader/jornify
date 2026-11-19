@@ -70,7 +70,7 @@ El color de las tarjetas del reloj lo pone siempre el **estado** de la jornada (
 
 El menú de la bandeja y los botones del reloj ofrecen **solo** las acciones válidas para el estado actual. El estado no se guarda aparte: se deriva del último evento del día en el historial.
 
-La jornada es de **10 horas con el almuerzo dentro** (los lunes, 9): tomarlo no alarga la jornada. Entrada 8:00 + 10 h = salida 6:00 p. m. Todo se cambia en Ajustes.
+La jornada es de **10 horas con el almuerzo dentro** (los lunes, 9): tomarlo no alarga la jornada. La salida es la hora en que inicias más 10 h (si inicias a las 8:00, sales a las 6:00 p. m.). Todo se cambia en Ajustes.
 
 ## 🚀 Instalación (para usar la app)
 

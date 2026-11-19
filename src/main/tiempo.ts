@@ -1,7 +1,7 @@
 // Cálculo del tiempo trabajado y restante. Sin dependencias de Electron.
 // La interfaz también importa este módulo para avanzar el reloj sin pedir datos al proceso principal.
 import { type EstadoJornada, type EventoJornada, estadoDesdeEventos, estadoTras } from './estado'
-import { horaDelDia, milisegundosDe } from './fechas'
+import { milisegundosDe } from './fechas'
 
 export interface OpcionesTiempo {
   jornadaObjetivoHoras: number
@@ -142,19 +142,20 @@ export interface EscalaDia {
 const MS_HORA = 3_600_000
 
 /**
- * Rango horario que muestra la línea del día: desde la hora de entrada (o el primer tramo, si fue antes)
+ * Rango horario que muestra la línea del día: desde la hora de inicio de la jornada (o el primer tramo, si fue antes)
  * hasta la hora de salida (o la salida estimada o "ahora", si pasan de ahí), redondeado a horas enteras.
+ * Sin jornada iniciada (`horario` null) la cinta arranca en la hora actual.
  */
 export function escalaDelDia(
   tramos: readonly TramoJornada[],
-  horario: { entradaMs: number; salidaMs: number },
+  horario: { entradaMs: number; salidaMs: number } | null,
   ahoraMs: number,
   salidaEstimadaMs: number | null
 ): EscalaDia {
   const primero = tramos[0]?.desdeMs ?? Infinity
-  const inicio = new Date(Math.min(horario.entradaMs, primero))
+  const inicio = new Date(Math.min(horario?.entradaMs ?? ahoraMs, primero))
   inicio.setMinutes(0, 0, 0)
-  const fin = new Date(Math.max(horario.salidaMs, salidaEstimadaMs ?? 0, ahoraMs))
+  const fin = new Date(Math.max(horario?.salidaMs ?? 0, salidaEstimadaMs ?? 0, ahoraMs))
   if (fin.getMinutes() !== 0 || fin.getSeconds() !== 0 || fin.getMilliseconds() !== 0) {
     fin.setHours(fin.getHours() + 1, 0, 0, 0)
   }
@@ -172,18 +173,6 @@ export function marcasDeHora(escala: EscalaDia, maxMarcas = 5): number[] {
   return marcas
 }
 
-/**
- * Hora de salida planeada ("HH:MM"): entrada + jornada. El almuerzo está dentro de la jornada, no la alarga.
- * Devuelve null si no cabe en el mismo día (llegaría a las 24:00 o después) o si la entrada no es válida.
- */
-export function salidaPlaneada(horaEntrada: string, jornadaHoras: number): string | null {
-  const partes = /^([0-2][0-9]):([0-5][0-9])$/.exec(horaEntrada)
-  if (!partes || !Number.isFinite(jornadaHoras)) return null
-  const total = Number(partes[1]) * 60 + Number(partes[2]) + Math.round(jornadaHoras * 60)
-  if (total >= 24 * 60) return null
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
-}
-
 export interface HorarioSemanal {
   /** Horas de la jornada completa, con el almuerzo dentro. */
   jornadaObjetivoHoras: number
@@ -196,22 +185,15 @@ export function recorteDelDia(fecha: Date, recorteLunesHoras: number): number {
   return fecha.getDay() === 1 ? recorteLunesHoras : 0
 }
 
-/** Horario con el que se calcula la salida planeada de un día. */
-export interface HorarioDeSalida extends HorarioSemanal {
-  /** Salida configurada ("HH:MM", entrada de Ajustes + jornada): solo vale mientras la jornada no ha empezado. */
-  horaSalida: string
-}
-
 /**
- * Salida planeada de un día a partir de cuándo empezó de verdad: el último `inicio` más la jornada (con el almuerzo
- * dentro), menos el recorte de los lunes y más lo que los almuerzos ya terminados se pasaron de su duración.
- * Sin ningún `inicio` (la jornada no ha empezado) es la hora de salida configurada, también con el recorte.
- * Quien entra a las 6:00 con la entrada de Ajustes a las 8:00 sale a las 16:00, como lo muestra el reloj.
+ * Salida planeada de un día a partir de cuándo empezó: el último `inicio` más la jornada (con el almuerzo dentro),
+ * menos el recorte de los lunes y más lo que los almuerzos ya terminados se pasaron de su duración.
+ * Es null si la jornada no ha empezado (no hay ningún `inicio`). Quien entra a las 6:00 sale a las 16:00 con 10 h.
  */
-export function salidaPlaneadaDelDia(eventos: readonly EventoJornada[], dia: Date, horario: HorarioDeSalida): Date {
+export function salidaPlaneadaDelDia(eventos: readonly EventoJornada[], dia: Date, horario: HorarioSemanal): Date | null {
   const recorteMs = recorteDelDia(dia, horario.recorteLunesHoras) * MS_POR_HORA
   const inicioMs = eventos.filter((evento) => evento.tipo === 'inicio').reduce((ultimo, evento) => Math.max(ultimo, milisegundosDe(evento.ocurridoEn)), -Infinity)
-  if (!Number.isFinite(inicioMs)) return new Date(horaDelDia(dia, horario.horaSalida).getTime() - recorteMs)
+  if (!Number.isFinite(inicioMs)) return null
   const almuerzoDeMasMs = calcularTramos(eventos)
     .filter((tramo) => tramo.estado === 'en_almuerzo' && tramo.hastaMs !== null)
     .reduce((suma, tramo) => suma + (tramo.hastaMs as number) - tramo.desdeMs, 0)

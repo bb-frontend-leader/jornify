@@ -36,8 +36,8 @@ export interface Instantanea {
   corriendo: boolean
   /** Tramos del día (trabajando, almuerzo, ausente) para dibujar la línea del día; el último puede estar abierto. */
   tramos: TramoJornada[]
-  /** Horario planeado de hoy (de la configuración), en ms desde la época. */
-  horario: { entradaMs: number; salidaMs: number }
+  /** Inicio de la jornada y salida planeada (inicio + jornada), en ms desde la época; null si hoy no ha empezado. */
+  horario: { entradaMs: number; salidaMs: number } | null
   siempreVisible: boolean
   sonidos: boolean
   /** Id del tema que se aplica hoy ("clasico" = sin tema); ya resuelto según la fecha. */
@@ -69,9 +69,7 @@ export interface NuevoProgramadoVista {
 
 /** Lo que se puede cambiar desde la pestaña de ajustes. */
 export interface Ajustes {
-  /** "HH:MM" en 24 h. */
-  horaEntrada: string
-  /** Horas netas por jornada, sin contar el almuerzo. */
+  /** Horas de la jornada completa, con el almuerzo dentro. */
   jornadaObjetivoHoras: number
   /** Horas que se restan a la jornada los lunes. */
   recorteLunesHoras: number

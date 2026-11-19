@@ -16,7 +16,7 @@ import { Cola } from './cola'
 import { construirMensaje, formatearMensaje } from './plantillas'
 import type { Publicador } from './publicadores/base'
 import type { NombreSonido } from './sonidos'
-import { horaDelDia, milisegundosDe } from './fechas'
+import { milisegundosDe } from './fechas'
 import { temaVigente } from './temas'
 import { calcularTiempo, calcularTramos, jornadaObjetivoDelDia, salidaPlaneadaDelDia } from './tiempo'
 
@@ -76,8 +76,9 @@ export class Controlador {
     const eventos = this.dependencias.historial.eventosDelDia(ahora)
     // Los lunes la jornada es más corta: se recorta la meta de horas y también la hora de salida planeada.
     const jornadaObjetivoHoras = jornadaObjetivoDelDia(config.horario, ahora)
-    // Con la jornada en marcha, entrada y salida salen de cuándo empezó de verdad; antes, del horario de Ajustes.
+    // Entrada y salida salen de cuándo empezó la jornada de verdad; sin jornada iniciada no hay horario.
     const ultimoInicio = [...eventos].reverse().find((evento) => evento.tipo === 'inicio')
+    const salidaPlaneada = salidaPlaneadaDelDia(eventos, ahora, config.horario)
     const tiempo = calcularTiempo(eventos, ahora, { ...config.horario, jornadaObjetivoHoras })
     const almuerzoMs = config.horario.duracionAlmuerzoMin * 60_000
     const salidaAAlmorzar = [...eventos].reverse().find((evento) => evento.tipo === 'almuerzo')
@@ -94,10 +95,10 @@ export class Controlador {
       calculadoEn: ahora.getTime(),
       corriendo: tiempo.corriendo,
       tramos: calcularTramos(eventos),
-      horario: {
-        entradaMs: ultimoInicio ? milisegundosDe(ultimoInicio.ocurridoEn) : horaDelDia(ahora, config.horario.horaEntrada).getTime(),
-        salidaMs: salidaPlaneadaDelDia(eventos, ahora, config.horario).getTime()
-      },
+      horario:
+        ultimoInicio && salidaPlaneada
+          ? { entradaMs: milisegundosDe(ultimoInicio.ocurridoEn), salidaMs: salidaPlaneada.getTime() }
+          : null,
       siempreVisible: config.app.siempreVisible,
       sonidos: config.app.sonidos,
       tema: temaVigente(config.app.tema, ahora)
@@ -175,7 +176,9 @@ export class Controlador {
       .filter((tramo) => tramo.estado === 'ausente')
       .reduce((suma, tramo) => suma + Math.max(0, (tramo.hastaMs ?? instante.getTime()) - tramo.desdeMs), 0)
 
-    const salidaPlaneadaMs = salidaPlaneadaDelDia(eventos, instante, config.horario).getTime()
+    const salidaPlaneada = salidaPlaneadaDelDia(eventos, instante, config.horario)
+    if (!salidaPlaneada) return trabajadoDeMas
+    const salidaPlaneadaMs = salidaPlaneada.getTime()
     const pasadoDeLaSalidaMs = Math.max(0, instante.getTime() - salidaPlaneadaMs)
     return trabajadoDeMas + Math.min(ausenteMs, pasadoDeLaSalidaMs)
   }

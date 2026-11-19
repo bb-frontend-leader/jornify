@@ -37,13 +37,11 @@ const sinRecordatorios = (cambios: Partial<Config['app']>): Config => {
 
 describe('salidaPlaneadaDelDia', () => {
   const { horario } = configPorDefecto()
-  it('sin jornada iniciada es la hora de salida configurada, y el lunes una hora antes', () => {
-    expect(salidaPlaneadaDelDia([], en(12, 10), horario)).toEqual(en(12, 19))
-    expect(salidaPlaneadaDelDia([], en(9, 10), horario)).toEqual(en(9, 18))
+  it('sin jornada iniciada no hay salida planeada', () => {
+    expect(salidaPlaneadaDelDia([], en(12, 10), horario)).toBeNull()
   })
 
-  it('con la jornada iniciada sale de la hora real de inicio, no de la entrada de Ajustes', () => {
-    // Ajustes dice entrada 8:00 (salida 19:00 con 11 h), pero se entró a las 6:00.
+  it('sale de la hora real de inicio más la jornada (11 h en esta config) y el lunes una hora antes', () => {
     expect(salidaPlaneadaDelDia([evento('inicio', en(12, 6))], en(12, 10), horario)).toEqual(en(12, 17))
     expect(salidaPlaneadaDelDia([evento('inicio', en(9, 6))], en(9, 10), horario)).toEqual(en(9, 16))
   })
