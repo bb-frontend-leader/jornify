@@ -1,7 +1,7 @@
 // Cálculo del tiempo trabajado y restante. Sin dependencias de Electron.
 // La interfaz también importa este módulo para avanzar el reloj sin pedir datos al proceso principal.
 import { type EstadoJornada, type EventoJornada, estadoDesdeEventos, estadoTras } from './estado'
-import { milisegundosDe } from './fechas'
+import { horaDelDia, milisegundosDe } from './fechas'
 
 export interface OpcionesTiempo {
   jornadaObjetivoHoras: number
@@ -194,6 +194,28 @@ export interface HorarioSemanal {
 /** Horas que se recortan a la jornada de ese día: `recorteLunesHoras` los lunes y nada el resto de la semana. */
 export function recorteDelDia(fecha: Date, recorteLunesHoras: number): number {
   return fecha.getDay() === 1 ? recorteLunesHoras : 0
+}
+
+/** Horario con el que se calcula la salida planeada de un día. */
+export interface HorarioDeSalida extends HorarioSemanal {
+  /** Salida configurada ("HH:MM", entrada de Ajustes + jornada): solo vale mientras la jornada no ha empezado. */
+  horaSalida: string
+}
+
+/**
+ * Salida planeada de un día a partir de cuándo empezó de verdad: el último `inicio` más la jornada (con el almuerzo
+ * dentro), menos el recorte de los lunes y más lo que los almuerzos ya terminados se pasaron de su duración.
+ * Sin ningún `inicio` (la jornada no ha empezado) es la hora de salida configurada, también con el recorte.
+ * Quien entra a las 6:00 con la entrada de Ajustes a las 8:00 sale a las 16:00, como lo muestra el reloj.
+ */
+export function salidaPlaneadaDelDia(eventos: readonly EventoJornada[], dia: Date, horario: HorarioDeSalida): Date {
+  const recorteMs = recorteDelDia(dia, horario.recorteLunesHoras) * MS_POR_HORA
+  const inicioMs = eventos.filter((evento) => evento.tipo === 'inicio').reduce((ultimo, evento) => Math.max(ultimo, milisegundosDe(evento.ocurridoEn)), -Infinity)
+  if (!Number.isFinite(inicioMs)) return new Date(horaDelDia(dia, horario.horaSalida).getTime() - recorteMs)
+  const almuerzoDeMasMs = calcularTramos(eventos)
+    .filter((tramo) => tramo.estado === 'en_almuerzo' && tramo.hastaMs !== null)
+    .reduce((suma, tramo) => suma + (tramo.hastaMs as number) - tramo.desdeMs, 0)
+  return new Date(inicioMs + horario.jornadaObjetivoHoras * MS_POR_HORA - recorteMs + Math.max(0, almuerzoDeMasMs - horario.duracionAlmuerzoMin * 60_000))
 }
 
 /** Horas netas (sin almuerzo) que hay que trabajar ese día: la jornada menos el recorte y menos el almuerzo; nunca menos de 0. */

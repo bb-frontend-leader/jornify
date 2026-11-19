@@ -2,10 +2,10 @@
 // Sin dependencias de Electron: el aviso se entrega con una función inyectada (en la app, una notificación de Windows).
 import type { Config } from './configEsquema'
 import { estadoDesdeEventos } from './estado'
-import { horaDelDia, milisegundosDe } from './fechas'
+import { milisegundosDe } from './fechas'
 import type { Evento, Historial } from './historial'
 import { formatearDuracionEnPalabras, formatearHora } from './plantillas'
-import { recorteDelDia } from './tiempo'
+import { salidaPlaneadaDelDia } from './tiempo'
 
 /**
  * Margen tras la duración del almuerzo antes de avisar. Con el regreso automático activado el `Programador` marca el
@@ -38,16 +38,10 @@ export interface RecordatorioPendiente {
 const dosDigitos = (n: number): string => String(n).padStart(2, '0')
 const claveDeFecha = (f: Date): string => `${f.getFullYear()}-${dosDigitos(f.getMonth() + 1)}-${dosDigitos(f.getDate())}`
 
-/** Hora de salida planeada de ese día (los lunes, con el recorte), como en el reloj. */
-export function salidaPlaneadaDelDia(dia: Date, config: Config): Date {
-  const recorteMs = recorteDelDia(dia, config.horario.recorteLunesHoras) * 3_600_000
-  return new Date(horaDelDia(dia, config.horario.horaSalida).getTime() - recorteMs)
-}
-
 /**
  * Recordatorios que todavía pueden hacer falta, a partir de los eventos del día (en orden):
- * - Salida: la jornada sigue abierta y empezó antes de la hora de salida (quien arranca ya pasada la hora, recuperando
- *   tiempo, no recibe el aviso). Uno por día.
+ * - Salida: la jornada sigue abierta; la hora sale de cuándo empezó de verdad (`salidaPlaneadaDelDia`), como en el reloj.
+ *   Si esa hora cae otro día (se empezó de noche) no hay aviso. Uno por día.
  * - Almuerzo: se está almorzando y ya pasó la duración configurada (más `GRACIA_ALMUERZO_MS`). Uno por salida a almorzar.
  */
 export function calcularRecordatorios(eventos: readonly Evento[], ahora: Date, config: Config): RecordatorioPendiente[] {
@@ -56,8 +50,8 @@ export function calcularRecordatorios(eventos: readonly Evento[], ahora: Date, c
 
   const inicio = [...eventos].reverse().find((evento) => evento.tipo === 'inicio')
   if (config.app.recordarSalida && inicio) {
-    const salida = salidaPlaneadaDelDia(ahora, config).getTime()
-    if (milisegundosDe(inicio.ocurridoEn) < salida) {
+    const salida = salidaPlaneadaDelDia(eventos, ahora, config.horario).getTime()
+    if (claveDeFecha(new Date(salida)) === claveDeFecha(ahora)) {
       pendientes.push({ clave: `salida-${claveDeFecha(ahora)}`, tipo: 'salida', cuandoMs: salida, referenciaMs: salida })
     }
   }

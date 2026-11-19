@@ -9,9 +9,9 @@ import {
   GRACIA_ALMUERZO_MS,
   Recordatorios,
   calcularRecordatorios,
-  redactarAviso,
-  salidaPlaneadaDelDia
+  redactarAviso
 } from '../src/main/recordatorios'
+import { salidaPlaneadaDelDia } from '../src/main/tiempo'
 
 const MIN = 60_000
 
@@ -36,10 +36,28 @@ const sinRecordatorios = (cambios: Partial<Config['app']>): Config => {
 }
 
 describe('salidaPlaneadaDelDia', () => {
-  const config = configPorDefecto()
-  it('es la hora de salida configurada, y el lunes una hora antes', () => {
-    expect(salidaPlaneadaDelDia(en(12, 10), config)).toEqual(en(12, 19))
-    expect(salidaPlaneadaDelDia(en(9, 10), config)).toEqual(en(9, 18))
+  const { horario } = configPorDefecto()
+  it('sin jornada iniciada es la hora de salida configurada, y el lunes una hora antes', () => {
+    expect(salidaPlaneadaDelDia([], en(12, 10), horario)).toEqual(en(12, 19))
+    expect(salidaPlaneadaDelDia([], en(9, 10), horario)).toEqual(en(9, 18))
+  })
+
+  it('con la jornada iniciada sale de la hora real de inicio, no de la entrada de Ajustes', () => {
+    // Ajustes dice entrada 8:00 (salida 19:00 con 11 h), pero se entró a las 6:00.
+    expect(salidaPlaneadaDelDia([evento('inicio', en(12, 6))], en(12, 10), horario)).toEqual(en(12, 17))
+    expect(salidaPlaneadaDelDia([evento('inicio', en(9, 6))], en(9, 10), horario)).toEqual(en(9, 16))
+  })
+
+  it('un almuerzo terminado que se pasó corre la salida; uno corto no la adelanta', () => {
+    const largo = [evento('inicio', en(12, 6)), evento('almuerzo', en(12, 11)), evento('regreso_almuerzo', en(12, 12, 30))]
+    expect(salidaPlaneadaDelDia(largo, en(12, 13), horario)).toEqual(en(12, 17, 30))
+    const corto = [evento('inicio', en(12, 6)), evento('almuerzo', en(12, 11)), evento('regreso_almuerzo', en(12, 11, 30))]
+    expect(salidaPlaneadaDelDia(corto, en(12, 13), horario)).toEqual(en(12, 17))
+  })
+
+  it('con varias jornadas el día cuenta desde el último inicio', () => {
+    const eventos = [evento('inicio', en(12, 6)), evento('fin', en(12, 9)), evento('inicio', en(12, 10))]
+    expect(salidaPlaneadaDelDia(eventos, en(12, 11), horario)).toEqual(en(12, 21))
   })
 })
 
@@ -57,6 +75,11 @@ describe('calcularRecordatorios', () => {
     expect(pendientes).toEqual([
       { clave: 'salida-2026-11-12', tipo: 'salida', cuandoMs: en(12, 19).getTime(), referenciaMs: en(12, 19).getTime() }
     ])
+  })
+
+  it('el aviso llega a la hora real de salida: entrando a las 6:00 avisa a las 5:00 p. m. (11 h con almuerzo)', () => {
+    const [salida] = calcularRecordatorios([evento('inicio', en(12, 6))], en(12, 9), config)
+    expect(salida?.cuandoMs).toBe(en(12, 17).getTime())
   })
 
   it('el lunes la salida es una hora antes', () => {

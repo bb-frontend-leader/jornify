@@ -18,7 +18,7 @@ import type { Publicador } from './publicadores/base'
 import type { NombreSonido } from './sonidos'
 import { horaDelDia, milisegundosDe } from './fechas'
 import { temaVigente } from './temas'
-import { calcularTiempo, calcularTramos, jornadaObjetivoDelDia, recorteDelDia } from './tiempo'
+import { calcularTiempo, calcularTramos, jornadaObjetivoDelDia, salidaPlaneadaDelDia } from './tiempo'
 
 export interface DependenciasControlador {
   historial: Historial
@@ -76,7 +76,8 @@ export class Controlador {
     const eventos = this.dependencias.historial.eventosDelDia(ahora)
     // Los lunes la jornada es más corta: se recorta la meta de horas y también la hora de salida planeada.
     const jornadaObjetivoHoras = jornadaObjetivoDelDia(config.horario, ahora)
-    const recorteMs = recorteDelDia(ahora, config.horario.recorteLunesHoras) * 3_600_000
+    // Con la jornada en marcha, entrada y salida salen de cuándo empezó de verdad; antes, del horario de Ajustes.
+    const ultimoInicio = [...eventos].reverse().find((evento) => evento.tipo === 'inicio')
     const tiempo = calcularTiempo(eventos, ahora, { ...config.horario, jornadaObjetivoHoras })
     const almuerzoMs = config.horario.duracionAlmuerzoMin * 60_000
     const salidaAAlmorzar = [...eventos].reverse().find((evento) => evento.tipo === 'almuerzo')
@@ -94,8 +95,8 @@ export class Controlador {
       corriendo: tiempo.corriendo,
       tramos: calcularTramos(eventos),
       horario: {
-        entradaMs: horaDelDia(ahora, config.horario.horaEntrada).getTime(),
-        salidaMs: horaDelDia(ahora, config.horario.horaSalida).getTime() - recorteMs
+        entradaMs: ultimoInicio ? milisegundosDe(ultimoInicio.ocurridoEn) : horaDelDia(ahora, config.horario.horaEntrada).getTime(),
+        salidaMs: salidaPlaneadaDelDia(eventos, ahora, config.horario).getTime()
       },
       siempreVisible: config.app.siempreVisible,
       sonidos: config.app.sonidos,
@@ -170,18 +171,11 @@ export class Controlador {
     const trabajadoDeMas = calcularTiempo(eventos, instante, { ...config.horario, jornadaObjetivoHoras }).extraMs
     if (!config.horario.descontarAusencias) return trabajadoDeMas // la ausencia ya cuenta como trabajada
     const tramos = calcularTramos(eventos)
-    const duracionDe = (estado: 'ausente' | 'en_almuerzo'): number =>
-      tramos
-        .filter((tramo) => tramo.estado === estado)
-        .reduce((suma, tramo) => suma + Math.max(0, (tramo.hastaMs ?? instante.getTime()) - tramo.desdeMs), 0)
-    const ausenteMs = duracionDe('ausente')
-    const almuerzoDeMasMs = Math.max(0, duracionDe('en_almuerzo') - config.horario.duracionAlmuerzoMin * 60_000)
+    const ausenteMs = tramos
+      .filter((tramo) => tramo.estado === 'ausente')
+      .reduce((suma, tramo) => suma + Math.max(0, (tramo.hastaMs ?? instante.getTime()) - tramo.desdeMs), 0)
 
-    const ultimoInicio = [...eventos].reverse().find((evento) => evento.tipo === 'inicio')
-    const recorteMs = recorteDelDia(instante, config.horario.recorteLunesHoras) * 3_600_000
-    const salidaPlaneadaMs = ultimoInicio
-      ? milisegundosDe(ultimoInicio.ocurridoEn) + config.horario.jornadaObjetivoHoras * 3_600_000 - recorteMs + almuerzoDeMasMs
-      : horaDelDia(instante, config.horario.horaSalida).getTime() - recorteMs
+    const salidaPlaneadaMs = salidaPlaneadaDelDia(eventos, instante, config.horario).getTime()
     const pasadoDeLaSalidaMs = Math.max(0, instante.getTime() - salidaPlaneadaMs)
     return trabajadoDeMas + Math.min(ausenteMs, pasadoDeLaSalidaMs)
   }

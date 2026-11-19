@@ -395,6 +395,25 @@ describe('Controlador: datos para la línea del día', () => {
     })
     historial.cerrar()
   })
+
+  it('con la jornada en marcha, entrada y salida salen de la hora real de inicio y no de Ajustes', async () => {
+    const historial = Historial.abrir(':memory:')
+    const publicador = new PublicadorFalso()
+    let reloj = new Date(2026, 10, 6, 6, 0)
+    const controlador = new Controlador({ historial, publicador, obtenerConfig: configPorDefecto, ahora: () => reloj })
+    // Antes de empezar: el horario de Ajustes (8:00 a 19:00).
+    expect(controlador.instantanea().horario).toEqual({
+      entradaMs: new Date(2026, 10, 6, 8, 0).getTime(),
+      salidaMs: new Date(2026, 10, 6, 19, 0).getTime()
+    })
+    await controlador.ejecutar('inicio')
+    reloj = new Date(2026, 10, 6, 7, 0)
+    expect(controlador.instantanea().horario).toEqual({
+      entradaMs: new Date(2026, 10, 6, 6, 0).getTime(),
+      salidaMs: new Date(2026, 10, 6, 17, 0).getTime()
+    })
+    historial.cerrar()
+  })
 })
 
 describe('Controlador: sonidos', () => {
