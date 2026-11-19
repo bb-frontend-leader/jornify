@@ -115,3 +115,54 @@ describe('el almuerzo no alarga la jornada', () => {
     })
   })
 })
+
+// La salida planeada del mensaje de fin sale de cuándo se empezó, no de la hora de entrada de Ajustes.
+describe('mensaje de fin al recuperar una ausencia entrando a otra hora', () => {
+  async function jornada(pasos: [string, number, number][]): Promise<string> {
+    let reloj = new Date(2026, 10, 10, 6, 0)
+    const mensajes: string[] = []
+    const publicador: Publicador = {
+      publicar: (mensaje) => {
+        mensajes.push(mensaje)
+        return Promise.resolve()
+      }
+    }
+    // Config por defecto: entrada de Ajustes a las 8:00 y jornada de 10 h (salida 18:00), pero se entra a las 6:00.
+    const controlador = new Controlador({
+      historial: Historial.abrir(':memory:'),
+      publicador,
+      obtenerConfig: configPorDefecto,
+      ahora: () => reloj,
+      nombre: 'Ale',
+      registrarError: () => undefined
+    })
+    for (const [tipo, h, m] of pasos) {
+      reloj = new Date(2026, 10, 10, h, m)
+      await controlador.ejecutar(tipo as 'inicio')
+    }
+    return mensajes.at(-1) ?? ''
+  }
+  const base: [string, number, number][] = [['inicio', 6, 0], ['almuerzo', 11, 0], ['regreso_almuerzo', 12, 0], ['ausencia', 14, 0], ['regreso', 14, 20]]
+
+  it('entra a las 6:00, se ausenta 20 minutos y sale a las 4:20 p. m.: dice que recupera 20 minutos', async () => {
+    expect(await jornada([...base, ['fin', 16, 20]])).toBe(
+      '⏱️ Buenas tardes, termino mi jornada (4:20 p. m.) y recupero 20 minutos de hoy @Angela Ortiz Peña'
+    )
+  })
+
+  it('sale a las 4:00 p. m. sin recuperar la ausencia: mensaje normal', async () => {
+    expect(await jornada([...base, ['fin', 16, 0]])).toBe('🌇 Buenas tardes, termino mi jornada (4:00 p. m.) @Angela Ortiz Peña')
+  })
+
+  it('un almuerzo que se pasa corre la salida sin ser tiempo recuperado', async () => {
+    // Almuerzo de 1 h 30 min y sin ausencias: sale a las 4:30 p. m. sin nada que recuperar.
+    const pasos: [string, number, number][] = [['inicio', 6, 0], ['almuerzo', 11, 0], ['regreso_almuerzo', 12, 30], ['fin', 16, 30]]
+    expect(await jornada(pasos)).toBe('🌇 Buenas tardes, termino mi jornada (4:30 p. m.) @Angela Ortiz Peña')
+  })
+
+  it('con almuerzo pasado y ausencia, solo cuenta la ausencia recuperada', async () => {
+    // Almuerzo de 1 h 30 min (30 de más) y 20 min ausente: la salida planeada pasa a las 4:30; a las 4:50 recupera 20.
+    const pasos: [string, number, number][] = [['inicio', 6, 0], ['almuerzo', 11, 0], ['regreso_almuerzo', 12, 30], ['ausencia', 14, 0], ['regreso', 14, 20], ['fin', 16, 50]]
+    expect(await jornada(pasos)).toBe('⏱️ Buenas tardes, termino mi jornada (4:50 p. m.) y recupero 20 minutos de hoy @Angela Ortiz Peña')
+  })
+})
